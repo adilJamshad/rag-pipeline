@@ -1,0 +1,19 @@
+services:
+  db:
+    image: pgvector/pgvector:pg17
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: rfc
+      POSTGRES_PASSWORD: rfc
+      POSTGRES_DB: rfc
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./sql:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rfc -d rfc"]
+      interval: 5s
+      retries: 10
+
+volumes:
+  pgdata:

@@ -2,6 +2,8 @@
 
 Question answering over IETF RFCs, scoped to the DNS family. Portfolio project; learning the domain is an explicit goal, so explain protocol concepts rather than assuming them.
 
+Machine-specific setup (model endpoints, credentials, ports) lives in `CLAUDE.local.md`, which is not committed.
+
 ## The one rule
 
 **The LLM never decides a fact.** Whether an RFC is current, what replaced it, what updated it — those come from SQL only. The LLM receives facts the database already proved and writes sentences around them. A model answer that contradicts the database is a bug in routing, not a prompting problem.
@@ -25,21 +27,10 @@ Route by rule, not by model. Log which path each question took.
 
 ## Stack
 
-- Python 3.12 via `uv` (3.9 is the system default — do not use it)
-- Postgres 17 + pgvector, **port 5433**, via `docker compose up -d`
+- Python 3.12 via `uv`
+- Postgres 17 + pgvector on port 5433, via `docker compose up -d`
 - Retrieval: Postgres full-text search and pgvector, compared against each other
-- LLM: oMLX `gpt-oss-20b-MXFP4-Q8` at `127.0.0.1:8000`
-- Embeddings: oMLX `bge-small-en-v1.5-bf16`, 384 dimensions
-
-**Never touch `meetovo-db-1` on port 5432.** That is unrelated production work. This project owns 5433 only.
-
-## Local model gotchas (measured, not guessed)
-
-- oMLX needs `Authorization: Bearer <key>`; the key is at `.auth.api_key` in `~/.omlx/settings.json`. Read it, never print or commit it.
-- gpt-oss is a reasoning model. Reasoning tokens are spent from `max_tokens`, so a small budget returns an **empty** `content`. Always pass `reasoning_effort: "low"` and `max_tokens >= 500`.
-- Measured: `reasoning_effort: "low"` took one extraction question from 8.8s to 2.0s with no quality loss.
-- Context is 131072 max, capped to 32768 in oMLX settings. Do not rely on stuffing whole RFCs: RFC 1035 alone is ~24.5k tokens and took 82s to answer nothing.
-- Apple Foundation Models at `127.0.0.1:1976` is the fallback adapter target. ~4k context, no embeddings, always streams, and has guardrails that fire on unusual input.
+- LLM and embeddings: any OpenAI-compatible endpoint, through `src/rfc_rag/llm.py`
 
 ## Corpus gotchas
 
@@ -49,11 +40,12 @@ Route by rule, not by model. Log which path each question took.
 - `<pre>` blocks hold ASCII diagrams and ABNF grammar, 50-160 per RFC. They embed badly. Keep them verbatim and index a description alongside.
 - The index at `https://www.rfc-editor.org/rfc-index.xml` uses namespace `https://www.rfc-editor.org/rfc-index` (https, not http). `/in-notes/rfc-index.xml` is a dead path.
 - Supersession fans out and chains: RFC 2616 is obsoleted by six RFCs at once; some chains run 33 deep. The deepest ones are the old periodically-republished "Internet Official Protocol Standards" meta-RFCs — exclude them from graph statistics deliberately.
+- 9,854 RFCs total; 1,384 obsoleted, 1,242 updated, 2,483 carry errata.
 
 ## Commands
 
     uv sync                       install
-    docker compose up -d          start postgres on 5433
+    docker compose up -d          start postgres
     uv run pytest                 tests
     psql $DATABASE_URL            open the db
 

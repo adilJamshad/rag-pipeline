@@ -1,7 +1,8 @@
 from pathlib import Path
 
-from . import index
+from . import fetch, index
 from .db import connect
+from .parse import sections
 
 DATA = Path("data")
 SEEDS = [1034, 1035]
@@ -45,6 +46,28 @@ def load_index(seeds: list[int] = SEEDS) -> tuple[set[int], set[int]]:
     return core, keep
 
 
+def load_sections(numbers: set[int]) -> int:
+    total = 0
+    with connect() as conn, conn.cursor() as cur:
+        for n in sorted(numbers):
+            parsed = sections(fetch.html(n))
+            cur.executemany(
+                """insert into section (rfc, anchor, number, title, body, tokens, has_pre)
+                   values (%s, %s, %s, %s, %s, %s, %s)
+                   on conflict (rfc, anchor) do update set
+                     number = excluded.number, title = excluded.title,
+                     body = excluded.body, tokens = excluded.tokens,
+                     has_pre = excluded.has_pre, embedding = null""",
+                [(n, s.anchor, s.number, s.title, s.body, s.tokens, s.has_pre) for s in parsed],
+            )
+            conn.commit()
+            total += len(parsed)
+            print(f"  rfc{n:<5} {len(parsed):>4} sections", flush=True)
+    return total
+
+
 if __name__ == "__main__":
     core, keep = load_index()
     print(f"loaded {len(keep)} RFCs ({len(core)} in the DNS core)")
+    total = load_sections(core)
+    print(f"parsed {total} sections")

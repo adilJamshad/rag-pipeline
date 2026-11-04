@@ -1,0 +1,380 @@
+{"id": "fact-882-current", "question": "Is RFC 882 still current?", "kind": "facts", "field": "current", "rfc": 882, "answer": false}
+{"id": "fact-882-replaced", "question": "Has RFC 882 been replaced?", "kind": "facts", "field": "replaced", "rfc": 882, "answer": true}
+{"id": "fact-882-obsoleted_by", "question": "What replaced RFC 882?", "kind": "facts", "field": "obsoleted_by", "rfc": 882, "answer": [1034, 1035]}
+{"id": "fact-882-updated_by", "question": "What updates RFC 882?", "kind": "facts", "field": "updated_by", "rfc": 882, "answer": [973]}
+{"id": "fact-882-update_count", "question": "How many RFCs have updated RFC 882?", "kind": "facts", "field": "update_count", "rfc": 882, "answer": 1}
+{"id": "fact-883-current", "question": "Is RFC 883 still current?", "kind": "facts", "field": "current", "rfc": 883, "answer": false}
+{"id": "fact-883-replaced", "question": "Has RFC 883 been replaced?", "kind": "facts", "field": "replaced", "rfc": 883, "answer": true}
+{"id": "fact-883-obsoleted_by", "question": "What replaced RFC 883?", "kind": "facts", "field": "obsoleted_by", "rfc": 883, "answer": [1034, 1035]}
+{"id": "fact-883-updated_by", "question": "What updates RFC 883?", "kind": "facts", "field": "updated_by", "rfc": 883, "answer": [973]}
+{"id": "fact-883-update_count", "question": "How many RFCs have updated RFC 883?", "kind": "facts", "field": "update_count", "rfc": 883, "answer": 1}
+{"id": "fact-973-current", "question": "Is RFC 973 still current?", "kind": "facts", "field": "current", "rfc": 973, "answer": false}
+{"id": "fact-973-replaced", "question": "Has RFC 973 been replaced?", "kind": "facts", "field": "replaced", "rfc": 973, "answer": true}
+{"id": "fact-973-obsoleted_by", "question": "What replaced RFC 973?", "kind": "facts", "field": "obsoleted_by", "rfc": 973, "answer": [1034, 1035]}
+{"id": "fact-973-updated_by", "question": "What updates RFC 973?", "kind": "facts", "field": "updated_by", "rfc": 973, "answer": []}
+{"id": "fact-973-update_count", "question": "How many RFCs have updated RFC 973?", "kind": "facts", "field": "update_count", "rfc": 973, "answer": 0}
+{"id": "fact-1034-current", "question": "Is RFC 1034 still current?", "kind": "facts", "field": "current", "rfc": 1034, "answer": true}
+{"id": "fact-1034-replaced", "question": "Has RFC 1034 been replaced?", "kind": "facts", "field": "replaced", "rfc": 1034, "answer": false}
+{"id": "fact-1034-obsoleted_by", "question": "What replaced RFC 1034?", "kind": "facts", "field": "obsoleted_by", "rfc": 1034, "answer": []}
+{"id": "fact-1034-updated_by", "question": "What updates RFC 1034?", "kind": "facts", "field": "updated_by", "rfc": 1034, "answer": [1101, 1183, 1348, 1876, 1982, 2065, 2181, 2308, 2535, 4033, 4034, 4035, 4343, 4592, 5936, 8020, 8482, 8767, 9471]}
+{"id": "fact-1034-update_count", "question": "How many RFCs have updated RFC 1034?", "kind": "facts", "field": "update_count", "rfc": 1034, "answer": 19}
+{"id": "fact-1035-current", "question": "Is RFC 1035 still current?", "kind": "facts", "field": "current", "rfc": 1035, "answer": true}
+{"id": "fact-1035-replaced", "question": "Has RFC 1035 been replaced?", "kind": "facts", "field": "replaced", "rfc": 1035, "answer": false}
+{"id": "fact-1035-obsoleted_by", "question": "What replaced RFC 1035?", "kind": "facts", "field": "obsoleted_by", "rfc": 1035, "answer": []}
+{"id": "fact-1035-updated_by", "question": "What updates RFC 1035?", "kind": "facts", "field": "updated_by", "rfc": 1035, "answer": [1101, 1183, 1348, 1876, 1982, 1995, 1996, 2065, 2136, 2137, 2181, 2308, 2535, 2673, 2845, 3425, 3658, 4033, 4034, 4035, 4343, 5936, 5966, 6604, 7766, 8482, 8490, 8767, 9619]}
+{"id": "fact-1035-update_count", "question": "How many RFCs have updated RFC 1035?", "kind": "facts", "field": "update_count", "rfc": 1035, "answer": 29}
+{"id": "fact-1101-current", "question": "Is RFC 1101 still current?", "kind": "facts", "field": "current", "rfc": 1101, "answer": true}
+{"id": "fact-1101-replaced", "question": "Has RFC 1101 been replaced?", "kind": "facts", "field": "replaced", "rfc": 1101, "answer": false}
+{"id": "fact-1101-obsoleted_by", "question": "What replaced RFC 1101?", "kind": "facts", "field": "obsoleted_by", "rfc": 1101, "answer": []}
+{"id": "fact-1101-updated_by", "question": "What updates RFC 1101?", "kind": "facts", "field": "updated_by", "rfc": 1101, "answer": []}
+{"id": "fact-1101-update_count", "question": "How many RFCs have updated RFC 1101?", "kind": "facts", "field": "update_count", "rfc": 1101, "answer": 0}
+{"id": "fact-1123-current", "question": "Is RFC 1123 still current?", "kind": "facts", "field": "current", "rfc": 1123, "answer": true}
+{"id": "fact-1123-replaced", "question": "Has RFC 1123 been replaced?", "kind": "facts", "field": "replaced", "rfc": 1123, "answer": false}
+{"id": "fact-1123-obsoleted_by", "question": "What replaced RFC 1123?", "kind": "facts", "field": "obsoleted_by", "rfc": 1123, "answer": []}
+{"id": "fact-1123-updated_by", "question": "What updates RFC 1123?", "kind": "facts", "field": "updated_by", "rfc": 1123, "answer": [1349, 2181, 5321, 5966, 7766, 9210]}
+{"id": "fact-1123-update_count", "question": "How many RFCs have updated RFC 1123?", "kind": "facts", "field": "update_count", "rfc": 1123, "answer": 6}
+{"id": "fact-1183-current", "question": "Is RFC 1183 still current?", "kind": "facts", "field": "current", "rfc": 1183, "answer": true}
+{"id": "fact-1183-replaced", "question": "Has RFC 1183 been replaced?", "kind": "facts", "field": "replaced", "rfc": 1183, "answer": false}
+{"id": "fact-1183-obsoleted_by", "question": "What replaced RFC 1183?", "kind": "facts", "field": "obsoleted_by", "rfc": 1183, "answer": []}
+{"id": "fact-1183-updated_by", "question": "What updates RFC 1183?", "kind": "facts", "field": "updated_by", "rfc": 1183, "answer": [5395, 5864, 6195, 6895]}
+{"id": "fact-1183-update_count", "question": "How many RFCs have updated RFC 1183?", "kind": "facts", "field": "update_count", "rfc": 1183, "answer": 4}
+{"id": "fact-1348-current", "question": "Is RFC 1348 still current?", "kind": "facts", "field": "current", "rfc": 1348, "answer": false}
+{"id": "fact-1348-replaced", "question": "Has RFC 1348 been replaced?", "kind": "facts", "field": "replaced", "rfc": 1348, "answer": true}
+{"id": "fact-1348-obsoleted_by", "question": "What replaced RFC 1348?", "kind": "facts", "field": "obsoleted_by", "rfc": 1348, "answer": [1637]}
+{"id": "fact-1348-updated_by", "question": "What updates RFC 1348?", "kind": "facts", "field": "updated_by", "rfc": 1348, "answer": []}
+{"id": "fact-1348-update_count", "question": "How many RFCs have updated RFC 1348?", "kind": "facts", "field": "update_count", "rfc": 1348, "answer": 0}
+{"id": "fact-1637-current", "question": "Is RFC 1637 still current?", "kind": "facts", "field": "current", "rfc": 1637, "answer": false}
+{"id": "fact-1637-replaced", "question": "Has RFC 1637 been replaced?", "kind": "facts", "field": "replaced", "rfc": 1637, "answer": true}
+{"id": "fact-1637-obsoleted_by", "question": "What replaced RFC 1637?", "kind": "facts", "field": "obsoleted_by", "rfc": 1637, "answer": [1706]}
+{"id": "fact-1637-updated_by", "question": "What updates RFC 1637?", "kind": "facts", "field": "updated_by", "rfc": 1637, "answer": []}
+{"id": "fact-1637-update_count", "question": "How many RFCs have updated RFC 1637?", "kind": "facts", "field": "update_count", "rfc": 1637, "answer": 0}
+{"id": "fact-1876-current", "question": "Is RFC 1876 still current?", "kind": "facts", "field": "current", "rfc": 1876, "answer": true}
+{"id": "fact-1876-replaced", "question": "Has RFC 1876 been replaced?", "kind": "facts", "field": "replaced", "rfc": 1876, "answer": false}
+{"id": "fact-1876-obsoleted_by", "question": "What replaced RFC 1876?", "kind": "facts", "field": "obsoleted_by", "rfc": 1876, "answer": []}
+{"id": "fact-1876-updated_by", "question": "What updates RFC 1876?", "kind": "facts", "field": "updated_by", "rfc": 1876, "answer": []}
+{"id": "fact-1876-update_count", "question": "How many RFCs have updated RFC 1876?", "kind": "facts", "field": "update_count", "rfc": 1876, "answer": 0}
+{"id": "fact-1982-current", "question": "Is RFC 1982 still current?", "kind": "facts", "field": "current", "rfc": 1982, "answer": true}
+{"id": "fact-1982-replaced", "question": "Has RFC 1982 been replaced?", "kind": "facts", "field": "replaced", "rfc": 1982, "answer": false}
+{"id": "fact-1982-obsoleted_by", "question": "What replaced RFC 1982?", "kind": "facts", "field": "obsoleted_by", "rfc": 1982, "answer": []}
+{"id": "fact-1982-updated_by", "question": "What updates RFC 1982?", "kind": "facts", "field": "updated_by", "rfc": 1982, "answer": []}
+{"id": "fact-1982-update_count", "question": "How many RFCs have updated RFC 1982?", "kind": "facts", "field": "update_count", "rfc": 1982, "answer": 0}
+{"id": "fact-1995-current", "question": "Is RFC 1995 still current?", "kind": "facts", "field": "current", "rfc": 1995, "answer": true}
+{"id": "fact-1995-replaced", "question": "Has RFC 1995 been replaced?", "kind": "facts", "field": "replaced", "rfc": 1995, "answer": false}
+{"id": "fact-1995-obsoleted_by", "question": "What replaced RFC 1995?", "kind": "facts", "field": "obsoleted_by", "rfc": 1995, "answer": []}
+{"id": "fact-1995-updated_by", "question": "What updates RFC 1995?", "kind": "facts", "field": "updated_by", "rfc": 1995, "answer": [9103]}
+{"id": "fact-1995-update_count", "question": "How many RFCs have updated RFC 1995?", "kind": "facts", "field": "update_count", "rfc": 1995, "answer": 1}
+{"id": "fact-1996-current", "question": "Is RFC 1996 still current?", "kind": "facts", "field": "current", "rfc": 1996, "answer": true}
+{"id": "fact-1996-replaced", "question": "Has RFC 1996 been replaced?", "kind": "facts", "field": "replaced", "rfc": 1996, "answer": false}
+{"id": "fact-1996-obsoleted_by", "question": "What replaced RFC 1996?", "kind": "facts", "field": "obsoleted_by", "rfc": 1996, "answer": []}
+{"id": "fact-1996-updated_by", "question": "What updates RFC 1996?", "kind": "facts", "field": "updated_by", "rfc": 1996, "answer": []}
+{"id": "fact-1996-update_count", "question": "How many RFCs have updated RFC 1996?", "kind": "facts", "field": "update_count", "rfc": 1996, "answer": 0}
+{"id": "fact-2065-current", "question": "Is RFC 2065 still current?", "kind": "facts", "field": "current", "rfc": 2065, "answer": false}
+{"id": "fact-2065-replaced", "question": "Has RFC 2065 been replaced?", "kind": "facts", "field": "replaced", "rfc": 2065, "answer": true}
+{"id": "fact-2065-obsoleted_by", "question": "What replaced RFC 2065?", "kind": "facts", "field": "obsoleted_by", "rfc": 2065, "answer": [2535]}
+{"id": "fact-2065-updated_by", "question": "What updates RFC 2065?", "kind": "facts", "field": "updated_by", "rfc": 2065, "answer": []}
+{"id": "fact-2065-update_count", "question": "How many RFCs have updated RFC 2065?", "kind": "facts", "field": "update_count", "rfc": 2065, "answer": 0}
+{"id": "fact-2136-current", "question": "Is RFC 2136 still current?", "kind": "facts", "field": "current", "rfc": 2136, "answer": true}
+{"id": "fact-2136-replaced", "question": "Has RFC 2136 been replaced?", "kind": "facts", "field": "replaced", "rfc": 2136, "answer": false}
+{"id": "fact-2136-obsoleted_by", "question": "What replaced RFC 2136?", "kind": "facts", "field": "obsoleted_by", "rfc": 2136, "answer": []}
+{"id": "fact-2136-updated_by", "question": "What updates RFC 2136?", "kind": "facts", "field": "updated_by", "rfc": 2136, "answer": [3007, 4033, 4034, 4035]}
+{"id": "fact-2136-update_count", "question": "How many RFCs have updated RFC 2136?", "kind": "facts", "field": "update_count", "rfc": 2136, "answer": 4}
+{"id": "fact-2137-current", "question": "Is RFC 2137 still current?", "kind": "facts", "field": "current", "rfc": 2137, "answer": false}
+{"id": "fact-2137-replaced", "question": "Has RFC 2137 been replaced?", "kind": "facts", "field": "replaced", "rfc": 2137, "answer": true}
+{"id": "fact-2137-obsoleted_by", "question": "What replaced RFC 2137?", "kind": "facts", "field": "obsoleted_by", "rfc": 2137, "answer": [3007]}
+{"id": "fact-2137-updated_by", "question": "What updates RFC 2137?", "kind": "facts", "field": "updated_by", "rfc": 2137, "answer": []}
+{"id": "fact-2137-update_count", "question": "How many RFCs have updated RFC 2137?", "kind": "facts", "field": "update_count", "rfc": 2137, "answer": 0}
+{"id": "fact-2181-current", "question": "Is RFC 2181 still current?", "kind": "facts", "field": "current", "rfc": 2181, "answer": true}
+{"id": "fact-2181-replaced", "question": "Has RFC 2181 been replaced?", "kind": "facts", "field": "replaced", "rfc": 2181, "answer": false}
+{"id": "fact-2181-obsoleted_by", "question": "What replaced RFC 2181?", "kind": "facts", "field": "obsoleted_by", "rfc": 2181, "answer": []}
+{"id": "fact-2181-updated_by", "question": "What updates RFC 2181?", "kind": "facts", "field": "updated_by", "rfc": 2181, "answer": [2535, 4033, 4034, 4035, 4343, 5452, 8767]}
+{"id": "fact-2181-update_count", "question": "How many RFCs have updated RFC 2181?", "kind": "facts", "field": "update_count", "rfc": 2181, "answer": 7}
+{"id": "fact-2308-current", "question": "Is RFC 2308 still current?", "kind": "facts", "field": "current", "rfc": 2308, "answer": true}
+{"id": "fact-2308-replaced", "question": "Has RFC 2308 been replaced?", "kind": "facts", "field": "replaced", "rfc": 2308, "answer": false}
+{"id": "fact-2308-obsoleted_by", "question": "What replaced RFC 2308?", "kind": "facts", "field": "obsoleted_by", "rfc": 2308, "answer": []}
+{"id": "fact-2308-updated_by", "question": "What updates RFC 2308?", "kind": "facts", "field": "updated_by", "rfc": 2308, "answer": [4033, 4034, 4035, 6604, 8020, 8499, 9499, 9520]}
+{"id": "fact-2308-update_count", "question": "How many RFCs have updated RFC 2308?", "kind": "facts", "field": "update_count", "rfc": 2308, "answer": 8}
+{"id": "fact-2535-current", "question": "Is RFC 2535 still current?", "kind": "facts", "field": "current", "rfc": 2535, "answer": false}
+{"id": "fact-2535-replaced", "question": "Has RFC 2535 been replaced?", "kind": "facts", "field": "replaced", "rfc": 2535, "answer": true}
+{"id": "fact-2535-obsoleted_by", "question": "What replaced RFC 2535?", "kind": "facts", "field": "obsoleted_by", "rfc": 2535, "answer": [4033, 4034, 4035]}
+{"id": "fact-2535-updated_by", "question": "What updates RFC 2535?", "kind": "facts", "field": "updated_by", "rfc": 2535, "answer": [2931, 3007, 3008, 3090, 3226, 3445, 3597, 3655, 3658, 3755, 3757, 3845]}
+{"id": "fact-2535-update_count", "question": "How many RFCs have updated RFC 2535?", "kind": "facts", "field": "update_count", "rfc": 2535, "answer": 12}
+{"id": "fact-2672-current", "question": "Is RFC 2672 still current?", "kind": "facts", "field": "current", "rfc": 2672, "answer": false}
+{"id": "fact-2672-replaced", "question": "Has RFC 2672 been replaced?", "kind": "facts", "field": "replaced", "rfc": 2672, "answer": true}
+{"id": "fact-2672-obsoleted_by", "question": "What replaced RFC 2672?", "kind": "facts", "field": "obsoleted_by", "rfc": 2672, "answer": [6672]}
+{"id": "fact-2672-updated_by", "question": "What updates RFC 2672?", "kind": "facts", "field": "updated_by", "rfc": 2672, "answer": [4592, 6604]}
+{"id": "fact-2672-update_count", "question": "How many RFCs have updated RFC 2672?", "kind": "facts", "field": "update_count", "rfc": 2672, "answer": 2}
+{"id": "fact-2673-current", "question": "Is RFC 2673 still current?", "kind": "facts", "field": "current", "rfc": 2673, "answer": false}
+{"id": "fact-2673-replaced", "question": "Has RFC 2673 been replaced?", "kind": "facts", "field": "replaced", "rfc": 2673, "answer": true}
+{"id": "fact-2673-obsoleted_by", "question": "What replaced RFC 2673?", "kind": "facts", "field": "obsoleted_by", "rfc": 2673, "answer": [6891]}
+{"id": "fact-2673-updated_by", "question": "What updates RFC 2673?", "kind": "facts", "field": "updated_by", "rfc": 2673, "answer": [3363, 3364]}
+{"id": "fact-2673-update_count", "question": "How many RFCs have updated RFC 2673?", "kind": "facts", "field": "update_count", "rfc": 2673, "answer": 2}
+{"id": "fact-2845-current", "question": "Is RFC 2845 still current?", "kind": "facts", "field": "current", "rfc": 2845, "answer": false}
+{"id": "fact-2845-replaced", "question": "Has RFC 2845 been replaced?", "kind": "facts", "field": "replaced", "rfc": 2845, "answer": true}
+{"id": "fact-2845-obsoleted_by", "question": "What replaced RFC 2845?", "kind": "facts", "field": "obsoleted_by", "rfc": 2845, "answer": [8945]}
+{"id": "fact-2845-updated_by", "question": "What updates RFC 2845?", "kind": "facts", "field": "updated_by", "rfc": 2845, "answer": [3645, 4635, 6895]}
+{"id": "fact-2845-update_count", "question": "How many RFCs have updated RFC 2845?", "kind": "facts", "field": "update_count", "rfc": 2845, "answer": 3}
+{"id": "fact-2931-current", "question": "Is RFC 2931 still current?", "kind": "facts", "field": "current", "rfc": 2931, "answer": true}
+{"id": "fact-2931-replaced", "question": "Has RFC 2931 been replaced?", "kind": "facts", "field": "replaced", "rfc": 2931, "answer": false}
+{"id": "fact-2931-obsoleted_by", "question": "What replaced RFC 2931?", "kind": "facts", "field": "obsoleted_by", "rfc": 2931, "answer": []}
+{"id": "fact-2931-updated_by", "question": "What updates RFC 2931?", "kind": "facts", "field": "updated_by", "rfc": 2931, "answer": []}
+{"id": "fact-2931-update_count", "question": "How many RFCs have updated RFC 2931?", "kind": "facts", "field": "update_count", "rfc": 2931, "answer": 0}
+{"id": "fact-3007-current", "question": "Is RFC 3007 still current?", "kind": "facts", "field": "current", "rfc": 3007, "answer": true}
+{"id": "fact-3007-replaced", "question": "Has RFC 3007 been replaced?", "kind": "facts", "field": "replaced", "rfc": 3007, "answer": false}
+{"id": "fact-3007-obsoleted_by", "question": "What replaced RFC 3007?", "kind": "facts", "field": "obsoleted_by", "rfc": 3007, "answer": []}
+{"id": "fact-3007-updated_by", "question": "What updates RFC 3007?", "kind": "facts", "field": "updated_by", "rfc": 3007, "answer": []}
+{"id": "fact-3007-update_count", "question": "How many RFCs have updated RFC 3007?", "kind": "facts", "field": "update_count", "rfc": 3007, "answer": 0}
+{"id": "fact-3008-current", "question": "Is RFC 3008 still current?", "kind": "facts", "field": "current", "rfc": 3008, "answer": false}
+{"id": "fact-3008-replaced", "question": "Has RFC 3008 been replaced?", "kind": "facts", "field": "replaced", "rfc": 3008, "answer": true}
+{"id": "fact-3008-obsoleted_by", "question": "What replaced RFC 3008?", "kind": "facts", "field": "obsoleted_by", "rfc": 3008, "answer": [4033, 4034, 4035]}
+{"id": "fact-3008-updated_by", "question": "What updates RFC 3008?", "kind": "facts", "field": "updated_by", "rfc": 3008, "answer": [3658]}
+{"id": "fact-3008-update_count", "question": "How many RFCs have updated RFC 3008?", "kind": "facts", "field": "update_count", "rfc": 3008, "answer": 1}
+{"id": "fact-3090-current", "question": "Is RFC 3090 still current?", "kind": "facts", "field": "current", "rfc": 3090, "answer": false}
+{"id": "fact-3090-replaced", "question": "Has RFC 3090 been replaced?", "kind": "facts", "field": "replaced", "rfc": 3090, "answer": true}
+{"id": "fact-3090-obsoleted_by", "question": "What replaced RFC 3090?", "kind": "facts", "field": "obsoleted_by", "rfc": 3090, "answer": [4033, 4034, 4035]}
+{"id": "fact-3090-updated_by", "question": "What updates RFC 3090?", "kind": "facts", "field": "updated_by", "rfc": 3090, "answer": [3658]}
+{"id": "fact-3090-update_count", "question": "How many RFCs have updated RFC 3090?", "kind": "facts", "field": "update_count", "rfc": 3090, "answer": 1}
+{"id": "fact-3225-current", "question": "Is RFC 3225 still current?", "kind": "facts", "field": "current", "rfc": 3225, "answer": true}
+{"id": "fact-3225-replaced", "question": "Has RFC 3225 been replaced?", "kind": "facts", "field": "replaced", "rfc": 3225, "answer": false}
+{"id": "fact-3225-obsoleted_by", "question": "What replaced RFC 3225?", "kind": "facts", "field": "obsoleted_by", "rfc": 3225, "answer": []}
+{"id": "fact-3225-updated_by", "question": "What updates RFC 3225?", "kind": "facts", "field": "updated_by", "rfc": 3225, "answer": [4033, 4034, 4035]}
+{"id": "fact-3225-update_count", "question": "How many RFCs have updated RFC 3225?", "kind": "facts", "field": "update_count", "rfc": 3225, "answer": 3}
+{"id": "fact-3226-current", "question": "Is RFC 3226 still current?", "kind": "facts", "field": "current", "rfc": 3226, "answer": true}
+{"id": "fact-3226-replaced", "question": "Has RFC 3226 been replaced?", "kind": "facts", "field": "replaced", "rfc": 3226, "answer": false}
+{"id": "fact-3226-obsoleted_by", "question": "What replaced RFC 3226?", "kind": "facts", "field": "obsoleted_by", "rfc": 3226, "answer": []}
+{"id": "fact-3226-updated_by", "question": "What updates RFC 3226?", "kind": "facts", "field": "updated_by", "rfc": 3226, "answer": [4033, 4034, 4035]}
+{"id": "fact-3226-update_count", "question": "How many RFCs have updated RFC 3226?", "kind": "facts", "field": "update_count", "rfc": 3226, "answer": 3}
+{"id": "fact-3363-current", "question": "Is RFC 3363 still current?", "kind": "facts", "field": "current", "rfc": 3363, "answer": true}
+{"id": "fact-3363-replaced", "question": "Has RFC 3363 been replaced?", "kind": "facts", "field": "replaced", "rfc": 3363, "answer": false}
+{"id": "fact-3363-obsoleted_by", "question": "What replaced RFC 3363?", "kind": "facts", "field": "obsoleted_by", "rfc": 3363, "answer": []}
+{"id": "fact-3363-updated_by", "question": "What updates RFC 3363?", "kind": "facts", "field": "updated_by", "rfc": 3363, "answer": [6672]}
+{"id": "fact-3363-update_count", "question": "How many RFCs have updated RFC 3363?", "kind": "facts", "field": "update_count", "rfc": 3363, "answer": 1}
+{"id": "fact-3364-current", "question": "Is RFC 3364 still current?", "kind": "facts", "field": "current", "rfc": 3364, "answer": true}
+{"id": "fact-3364-replaced", "question": "Has RFC 3364 been replaced?", "kind": "facts", "field": "replaced", "rfc": 3364, "answer": false}
+{"id": "fact-3364-obsoleted_by", "question": "What replaced RFC 3364?", "kind": "facts", "field": "obsoleted_by", "rfc": 3364, "answer": []}
+{"id": "fact-3364-updated_by", "question": "What updates RFC 3364?", "kind": "facts", "field": "updated_by", "rfc": 3364, "answer": []}
+{"id": "fact-3364-update_count", "question": "How many RFCs have updated RFC 3364?", "kind": "facts", "field": "update_count", "rfc": 3364, "answer": 0}
+{"id": "fact-3425-current", "question": "Is RFC 3425 still current?", "kind": "facts", "field": "current", "rfc": 3425, "answer": true}
+{"id": "fact-3425-replaced", "question": "Has RFC 3425 been replaced?", "kind": "facts", "field": "replaced", "rfc": 3425, "answer": false}
+{"id": "fact-3425-obsoleted_by", "question": "What replaced RFC 3425?", "kind": "facts", "field": "obsoleted_by", "rfc": 3425, "answer": []}
+{"id": "fact-3425-updated_by", "question": "What updates RFC 3425?", "kind": "facts", "field": "updated_by", "rfc": 3425, "answer": []}
+{"id": "fact-3425-update_count", "question": "How many RFCs have updated RFC 3425?", "kind": "facts", "field": "update_count", "rfc": 3425, "answer": 0}
+{"id": "fact-3445-current", "question": "Is RFC 3445 still current?", "kind": "facts", "field": "current", "rfc": 3445, "answer": false}
+{"id": "fact-3445-replaced", "question": "Has RFC 3445 been replaced?", "kind": "facts", "field": "replaced", "rfc": 3445, "answer": true}
+{"id": "fact-3445-obsoleted_by", "question": "What replaced RFC 3445?", "kind": "facts", "field": "obsoleted_by", "rfc": 3445, "answer": [4033, 4034, 4035]}
+{"id": "fact-3445-updated_by", "question": "What updates RFC 3445?", "kind": "facts", "field": "updated_by", "rfc": 3445, "answer": []}
+{"id": "fact-3445-update_count", "question": "How many RFCs have updated RFC 3445?", "kind": "facts", "field": "update_count", "rfc": 3445, "answer": 0}
+{"id": "fact-3597-current", "question": "Is RFC 3597 still current?", "kind": "facts", "field": "current", "rfc": 3597, "answer": true}
+{"id": "fact-3597-replaced", "question": "Has RFC 3597 been replaced?", "kind": "facts", "field": "replaced", "rfc": 3597, "answer": false}
+{"id": "fact-3597-obsoleted_by", "question": "What replaced RFC 3597?", "kind": "facts", "field": "obsoleted_by", "rfc": 3597, "answer": []}
+{"id": "fact-3597-updated_by", "question": "What updates RFC 3597?", "kind": "facts", "field": "updated_by", "rfc": 3597, "answer": [4033, 4034, 4035, 5395, 6195, 6895]}
+{"id": "fact-3597-update_count", "question": "How many RFCs have updated RFC 3597?", "kind": "facts", "field": "update_count", "rfc": 3597, "answer": 6}
+{"id": "fact-3645-current", "question": "Is RFC 3645 still current?", "kind": "facts", "field": "current", "rfc": 3645, "answer": true}
+{"id": "fact-3645-replaced", "question": "Has RFC 3645 been replaced?", "kind": "facts", "field": "replaced", "rfc": 3645, "answer": false}
+{"id": "fact-3645-obsoleted_by", "question": "What replaced RFC 3645?", "kind": "facts", "field": "obsoleted_by", "rfc": 3645, "answer": []}
+{"id": "fact-3645-updated_by", "question": "What updates RFC 3645?", "kind": "facts", "field": "updated_by", "rfc": 3645, "answer": []}
+{"id": "fact-3645-update_count", "question": "How many RFCs have updated RFC 3645?", "kind": "facts", "field": "update_count", "rfc": 3645, "answer": 0}
+{"id": "fact-3655-current", "question": "Is RFC 3655 still current?", "kind": "facts", "field": "current", "rfc": 3655, "answer": false}
+{"id": "fact-3655-replaced", "question": "Has RFC 3655 been replaced?", "kind": "facts", "field": "replaced", "rfc": 3655, "answer": true}
+{"id": "fact-3655-obsoleted_by", "question": "What replaced RFC 3655?", "kind": "facts", "field": "obsoleted_by", "rfc": 3655, "answer": [4033, 4034, 4035]}
+{"id": "fact-3655-updated_by", "question": "What updates RFC 3655?", "kind": "facts", "field": "updated_by", "rfc": 3655, "answer": []}
+{"id": "fact-3655-update_count", "question": "How many RFCs have updated RFC 3655?", "kind": "facts", "field": "update_count", "rfc": 3655, "answer": 0}
+{"id": "fact-3658-current", "question": "Is RFC 3658 still current?", "kind": "facts", "field": "current", "rfc": 3658, "answer": false}
+{"id": "fact-3658-replaced", "question": "Has RFC 3658 been replaced?", "kind": "facts", "field": "replaced", "rfc": 3658, "answer": true}
+{"id": "fact-3658-obsoleted_by", "question": "What replaced RFC 3658?", "kind": "facts", "field": "obsoleted_by", "rfc": 3658, "answer": [4033, 4034, 4035]}
+{"id": "fact-3658-updated_by", "question": "What updates RFC 3658?", "kind": "facts", "field": "updated_by", "rfc": 3658, "answer": [3755]}
+{"id": "fact-3658-update_count", "question": "How many RFCs have updated RFC 3658?", "kind": "facts", "field": "update_count", "rfc": 3658, "answer": 1}
+{"id": "fact-3755-current", "question": "Is RFC 3755 still current?", "kind": "facts", "field": "current", "rfc": 3755, "answer": false}
+{"id": "fact-3755-replaced", "question": "Has RFC 3755 been replaced?", "kind": "facts", "field": "replaced", "rfc": 3755, "answer": true}
+{"id": "fact-3755-obsoleted_by", "question": "What replaced RFC 3755?", "kind": "facts", "field": "obsoleted_by", "rfc": 3755, "answer": [4033, 4034, 4035]}
+{"id": "fact-3755-updated_by", "question": "What updates RFC 3755?", "kind": "facts", "field": "updated_by", "rfc": 3755, "answer": [3757, 3845]}
+{"id": "fact-3755-update_count", "question": "How many RFCs have updated RFC 3755?", "kind": "facts", "field": "update_count", "rfc": 3755, "answer": 2}
+{"id": "fact-3757-current", "question": "Is RFC 3757 still current?", "kind": "facts", "field": "current", "rfc": 3757, "answer": false}
+{"id": "fact-3757-replaced", "question": "Has RFC 3757 been replaced?", "kind": "facts", "field": "replaced", "rfc": 3757, "answer": true}
+{"id": "fact-3757-obsoleted_by", "question": "What replaced RFC 3757?", "kind": "facts", "field": "obsoleted_by", "rfc": 3757, "answer": [4033, 4034, 4035]}
+{"id": "fact-3757-updated_by", "question": "What updates RFC 3757?", "kind": "facts", "field": "updated_by", "rfc": 3757, "answer": []}
+{"id": "fact-3757-update_count", "question": "How many RFCs have updated RFC 3757?", "kind": "facts", "field": "update_count", "rfc": 3757, "answer": 0}
+{"id": "fact-3845-current", "question": "Is RFC 3845 still current?", "kind": "facts", "field": "current", "rfc": 3845, "answer": false}
+{"id": "fact-3845-replaced", "question": "Has RFC 3845 been replaced?", "kind": "facts", "field": "replaced", "rfc": 3845, "answer": true}
+{"id": "fact-3845-obsoleted_by", "question": "What replaced RFC 3845?", "kind": "facts", "field": "obsoleted_by", "rfc": 3845, "answer": [4033, 4034, 4035]}
+{"id": "fact-3845-updated_by", "question": "What updates RFC 3845?", "kind": "facts", "field": "updated_by", "rfc": 3845, "answer": []}
+{"id": "fact-3845-update_count", "question": "How many RFCs have updated RFC 3845?", "kind": "facts", "field": "update_count", "rfc": 3845, "answer": 0}
+{"id": "fact-4033-current", "question": "Is RFC 4033 still current?", "kind": "facts", "field": "current", "rfc": 4033, "answer": true}
+{"id": "fact-4033-replaced", "question": "Has RFC 4033 been replaced?", "kind": "facts", "field": "replaced", "rfc": 4033, "answer": false}
+{"id": "fact-4033-obsoleted_by", "question": "What replaced RFC 4033?", "kind": "facts", "field": "obsoleted_by", "rfc": 4033, "answer": []}
+{"id": "fact-4033-updated_by", "question": "What updates RFC 4033?", "kind": "facts", "field": "updated_by", "rfc": 4033, "answer": [6014, 6840]}
+{"id": "fact-4033-update_count", "question": "How many RFCs have updated RFC 4033?", "kind": "facts", "field": "update_count", "rfc": 4033, "answer": 2}
+{"id": "fact-4034-current", "question": "Is RFC 4034 still current?", "kind": "facts", "field": "current", "rfc": 4034, "answer": true}
+{"id": "fact-4034-replaced", "question": "Has RFC 4034 been replaced?", "kind": "facts", "field": "replaced", "rfc": 4034, "answer": false}
+{"id": "fact-4034-obsoleted_by", "question": "What replaced RFC 4034?", "kind": "facts", "field": "obsoleted_by", "rfc": 4034, "answer": []}
+{"id": "fact-4034-updated_by", "question": "What updates RFC 4034?", "kind": "facts", "field": "updated_by", "rfc": 4034, "answer": [4470, 6014, 6840, 6944, 9077, 9824, 9905]}
+{"id": "fact-4034-update_count", "question": "How many RFCs have updated RFC 4034?", "kind": "facts", "field": "update_count", "rfc": 4034, "answer": 7}
+{"id": "fact-4035-current", "question": "Is RFC 4035 still current?", "kind": "facts", "field": "current", "rfc": 4035, "answer": true}
+{"id": "fact-4035-replaced", "question": "Has RFC 4035 been replaced?", "kind": "facts", "field": "replaced", "rfc": 4035, "answer": false}
+{"id": "fact-4035-obsoleted_by", "question": "What replaced RFC 4035?", "kind": "facts", "field": "obsoleted_by", "rfc": 4035, "answer": []}
+{"id": "fact-4035-updated_by", "question": "What updates RFC 4035?", "kind": "facts", "field": "updated_by", "rfc": 4035, "answer": [4470, 6014, 6840, 8198, 9077, 9520, 9824]}
+{"id": "fact-4035-update_count", "question": "How many RFCs have updated RFC 4035?", "kind": "facts", "field": "update_count", "rfc": 4035, "answer": 7}
+{"id": "fact-4343-current", "question": "Is RFC 4343 still current?", "kind": "facts", "field": "current", "rfc": 4343, "answer": true}
+{"id": "fact-4343-replaced", "question": "Has RFC 4343 been replaced?", "kind": "facts", "field": "replaced", "rfc": 4343, "answer": false}
+{"id": "fact-4343-obsoleted_by", "question": "What replaced RFC 4343?", "kind": "facts", "field": "obsoleted_by", "rfc": 4343, "answer": []}
+{"id": "fact-4343-updated_by", "question": "What updates RFC 4343?", "kind": "facts", "field": "updated_by", "rfc": 4343, "answer": [5890]}
+{"id": "fact-4343-update_count", "question": "How many RFCs have updated RFC 4343?", "kind": "facts", "field": "update_count", "rfc": 4343, "answer": 1}
+{"id": "fact-4470-current", "question": "Is RFC 4470 still current?", "kind": "facts", "field": "current", "rfc": 4470, "answer": true}
+{"id": "fact-4470-replaced", "question": "Has RFC 4470 been replaced?", "kind": "facts", "field": "replaced", "rfc": 4470, "answer": false}
+{"id": "fact-4470-obsoleted_by", "question": "What replaced RFC 4470?", "kind": "facts", "field": "obsoleted_by", "rfc": 4470, "answer": []}
+{"id": "fact-4470-updated_by", "question": "What updates RFC 4470?", "kind": "facts", "field": "updated_by", "rfc": 4470, "answer": []}
+{"id": "fact-4470-update_count", "question": "How many RFCs have updated RFC 4470?", "kind": "facts", "field": "update_count", "rfc": 4470, "answer": 0}
+{"id": "fact-4592-current", "question": "Is RFC 4592 still current?", "kind": "facts", "field": "current", "rfc": 4592, "answer": true}
+{"id": "fact-4592-replaced", "question": "Has RFC 4592 been replaced?", "kind": "facts", "field": "replaced", "rfc": 4592, "answer": false}
+{"id": "fact-4592-obsoleted_by", "question": "What replaced RFC 4592?", "kind": "facts", "field": "obsoleted_by", "rfc": 4592, "answer": []}
+{"id": "fact-4592-updated_by", "question": "What updates RFC 4592?", "kind": "facts", "field": "updated_by", "rfc": 4592, "answer": []}
+{"id": "fact-4592-update_count", "question": "How many RFCs have updated RFC 4592?", "kind": "facts", "field": "update_count", "rfc": 4592, "answer": 0}
+{"id": "fact-4635-current", "question": "Is RFC 4635 still current?", "kind": "facts", "field": "current", "rfc": 4635, "answer": false}
+{"id": "fact-4635-replaced", "question": "Has RFC 4635 been replaced?", "kind": "facts", "field": "replaced", "rfc": 4635, "answer": true}
+{"id": "fact-4635-obsoleted_by", "question": "What replaced RFC 4635?", "kind": "facts", "field": "obsoleted_by", "rfc": 4635, "answer": [8945]}
+{"id": "fact-4635-updated_by", "question": "What updates RFC 4635?", "kind": "facts", "field": "updated_by", "rfc": 4635, "answer": []}
+{"id": "fact-4635-update_count", "question": "How many RFCs have updated RFC 4635?", "kind": "facts", "field": "update_count", "rfc": 4635, "answer": 0}
+{"id": "fact-5395-current", "question": "Is RFC 5395 still current?", "kind": "facts", "field": "current", "rfc": 5395, "answer": false}
+{"id": "fact-5395-replaced", "question": "Has RFC 5395 been replaced?", "kind": "facts", "field": "replaced", "rfc": 5395, "answer": true}
+{"id": "fact-5395-obsoleted_by", "question": "What replaced RFC 5395?", "kind": "facts", "field": "obsoleted_by", "rfc": 5395, "answer": [6195]}
+{"id": "fact-5395-updated_by", "question": "What updates RFC 5395?", "kind": "facts", "field": "updated_by", "rfc": 5395, "answer": []}
+{"id": "fact-5395-update_count", "question": "How many RFCs have updated RFC 5395?", "kind": "facts", "field": "update_count", "rfc": 5395, "answer": 0}
+{"id": "fact-5452-current", "question": "Is RFC 5452 still current?", "kind": "facts", "field": "current", "rfc": 5452, "answer": true}
+{"id": "fact-5452-replaced", "question": "Has RFC 5452 been replaced?", "kind": "facts", "field": "replaced", "rfc": 5452, "answer": false}
+{"id": "fact-5452-obsoleted_by", "question": "What replaced RFC 5452?", "kind": "facts", "field": "obsoleted_by", "rfc": 5452, "answer": []}
+{"id": "fact-5452-updated_by", "question": "What updates RFC 5452?", "kind": "facts", "field": "updated_by", "rfc": 5452, "answer": []}
+{"id": "fact-5452-update_count", "question": "How many RFCs have updated RFC 5452?", "kind": "facts", "field": "update_count", "rfc": 5452, "answer": 0}
+{"id": "fact-5864-current", "question": "Is RFC 5864 still current?", "kind": "facts", "field": "current", "rfc": 5864, "answer": true}
+{"id": "fact-5864-replaced", "question": "Has RFC 5864 been replaced?", "kind": "facts", "field": "replaced", "rfc": 5864, "answer": false}
+{"id": "fact-5864-obsoleted_by", "question": "What replaced RFC 5864?", "kind": "facts", "field": "obsoleted_by", "rfc": 5864, "answer": []}
+{"id": "fact-5864-updated_by", "question": "What updates RFC 5864?", "kind": "facts", "field": "updated_by", "rfc": 5864, "answer": [8553]}
+{"id": "fact-5864-update_count", "question": "How many RFCs have updated RFC 5864?", "kind": "facts", "field": "update_count", "rfc": 5864, "answer": 1}
+{"id": "fact-5890-current", "question": "Is RFC 5890 still current?", "kind": "facts", "field": "current", "rfc": 5890, "answer": true}
+{"id": "fact-5890-replaced", "question": "Has RFC 5890 been replaced?", "kind": "facts", "field": "replaced", "rfc": 5890, "answer": false}
+{"id": "fact-5890-obsoleted_by", "question": "What replaced RFC 5890?", "kind": "facts", "field": "obsoleted_by", "rfc": 5890, "answer": []}
+{"id": "fact-5890-updated_by", "question": "What updates RFC 5890?", "kind": "facts", "field": "updated_by", "rfc": 5890, "answer": []}
+{"id": "fact-5890-update_count", "question": "How many RFCs have updated RFC 5890?", "kind": "facts", "field": "update_count", "rfc": 5890, "answer": 0}
+{"id": "fact-5936-current", "question": "Is RFC 5936 still current?", "kind": "facts", "field": "current", "rfc": 5936, "answer": true}
+{"id": "fact-5936-replaced", "question": "Has RFC 5936 been replaced?", "kind": "facts", "field": "replaced", "rfc": 5936, "answer": false}
+{"id": "fact-5936-obsoleted_by", "question": "What replaced RFC 5936?", "kind": "facts", "field": "obsoleted_by", "rfc": 5936, "answer": []}
+{"id": "fact-5936-updated_by", "question": "What updates RFC 5936?", "kind": "facts", "field": "updated_by", "rfc": 5936, "answer": [9103]}
+{"id": "fact-5936-update_count", "question": "How many RFCs have updated RFC 5936?", "kind": "facts", "field": "update_count", "rfc": 5936, "answer": 1}
+{"id": "fact-5966-current", "question": "Is RFC 5966 still current?", "kind": "facts", "field": "current", "rfc": 5966, "answer": false}
+{"id": "fact-5966-replaced", "question": "Has RFC 5966 been replaced?", "kind": "facts", "field": "replaced", "rfc": 5966, "answer": true}
+{"id": "fact-5966-obsoleted_by", "question": "What replaced RFC 5966?", "kind": "facts", "field": "obsoleted_by", "rfc": 5966, "answer": [7766]}
+{"id": "fact-5966-updated_by", "question": "What updates RFC 5966?", "kind": "facts", "field": "updated_by", "rfc": 5966, "answer": []}
+{"id": "fact-5966-update_count", "question": "How many RFCs have updated RFC 5966?", "kind": "facts", "field": "update_count", "rfc": 5966, "answer": 0}
+{"id": "fact-6014-current", "question": "Is RFC 6014 still current?", "kind": "facts", "field": "current", "rfc": 6014, "answer": true}
+{"id": "fact-6014-replaced", "question": "Has RFC 6014 been replaced?", "kind": "facts", "field": "replaced", "rfc": 6014, "answer": false}
+{"id": "fact-6014-obsoleted_by", "question": "What replaced RFC 6014?", "kind": "facts", "field": "obsoleted_by", "rfc": 6014, "answer": []}
+{"id": "fact-6014-updated_by", "question": "What updates RFC 6014?", "kind": "facts", "field": "updated_by", "rfc": 6014, "answer": [9157]}
+{"id": "fact-6014-update_count", "question": "How many RFCs have updated RFC 6014?", "kind": "facts", "field": "update_count", "rfc": 6014, "answer": 1}
+{"id": "fact-6195-current", "question": "Is RFC 6195 still current?", "kind": "facts", "field": "current", "rfc": 6195, "answer": false}
+{"id": "fact-6195-replaced", "question": "Has RFC 6195 been replaced?", "kind": "facts", "field": "replaced", "rfc": 6195, "answer": true}
+{"id": "fact-6195-obsoleted_by", "question": "What replaced RFC 6195?", "kind": "facts", "field": "obsoleted_by", "rfc": 6195, "answer": [6895]}
+{"id": "fact-6195-updated_by", "question": "What updates RFC 6195?", "kind": "facts", "field": "updated_by", "rfc": 6195, "answer": []}
+{"id": "fact-6195-update_count", "question": "How many RFCs have updated RFC 6195?", "kind": "facts", "field": "update_count", "rfc": 6195, "answer": 0}
+{"id": "fact-6604-current", "question": "Is RFC 6604 still current?", "kind": "facts", "field": "current", "rfc": 6604, "answer": true}
+{"id": "fact-6604-replaced", "question": "Has RFC 6604 been replaced?", "kind": "facts", "field": "replaced", "rfc": 6604, "answer": false}
+{"id": "fact-6604-obsoleted_by", "question": "What replaced RFC 6604?", "kind": "facts", "field": "obsoleted_by", "rfc": 6604, "answer": []}
+{"id": "fact-6604-updated_by", "question": "What updates RFC 6604?", "kind": "facts", "field": "updated_by", "rfc": 6604, "answer": []}
+{"id": "fact-6604-update_count", "question": "How many RFCs have updated RFC 6604?", "kind": "facts", "field": "update_count", "rfc": 6604, "answer": 0}
+{"id": "fact-6840-current", "question": "Is RFC 6840 still current?", "kind": "facts", "field": "current", "rfc": 6840, "answer": true}
+{"id": "fact-6840-replaced", "question": "Has RFC 6840 been replaced?", "kind": "facts", "field": "replaced", "rfc": 6840, "answer": false}
+{"id": "fact-6840-obsoleted_by", "question": "What replaced RFC 6840?", "kind": "facts", "field": "obsoleted_by", "rfc": 6840, "answer": []}
+{"id": "fact-6840-updated_by", "question": "What updates RFC 6840?", "kind": "facts", "field": "updated_by", "rfc": 6840, "answer": [8749]}
+{"id": "fact-6840-update_count", "question": "How many RFCs have updated RFC 6840?", "kind": "facts", "field": "update_count", "rfc": 6840, "answer": 1}
+{"id": "fact-6891-current", "question": "Is RFC 6891 still current?", "kind": "facts", "field": "current", "rfc": 6891, "answer": true}
+{"id": "fact-6891-replaced", "question": "Has RFC 6891 been replaced?", "kind": "facts", "field": "replaced", "rfc": 6891, "answer": false}
+{"id": "fact-6891-obsoleted_by", "question": "What replaced RFC 6891?", "kind": "facts", "field": "obsoleted_by", "rfc": 6891, "answer": []}
+{"id": "fact-6891-updated_by", "question": "What updates RFC 6891?", "kind": "facts", "field": "updated_by", "rfc": 6891, "answer": []}
+{"id": "fact-6891-update_count", "question": "How many RFCs have updated RFC 6891?", "kind": "facts", "field": "update_count", "rfc": 6891, "answer": 0}
+{"id": "fact-6895-current", "question": "Is RFC 6895 still current?", "kind": "facts", "field": "current", "rfc": 6895, "answer": true}
+{"id": "fact-6895-replaced", "question": "Has RFC 6895 been replaced?", "kind": "facts", "field": "replaced", "rfc": 6895, "answer": false}
+{"id": "fact-6895-obsoleted_by", "question": "What replaced RFC 6895?", "kind": "facts", "field": "obsoleted_by", "rfc": 6895, "answer": []}
+{"id": "fact-6895-updated_by", "question": "What updates RFC 6895?", "kind": "facts", "field": "updated_by", "rfc": 6895, "answer": []}
+{"id": "fact-6895-update_count", "question": "How many RFCs have updated RFC 6895?", "kind": "facts", "field": "update_count", "rfc": 6895, "answer": 0}
+{"id": "fact-6944-current", "question": "Is RFC 6944 still current?", "kind": "facts", "field": "current", "rfc": 6944, "answer": false}
+{"id": "fact-6944-replaced", "question": "Has RFC 6944 been replaced?", "kind": "facts", "field": "replaced", "rfc": 6944, "answer": true}
+{"id": "fact-6944-obsoleted_by", "question": "What replaced RFC 6944?", "kind": "facts", "field": "obsoleted_by", "rfc": 6944, "answer": [8624]}
+{"id": "fact-6944-updated_by", "question": "What updates RFC 6944?", "kind": "facts", "field": "updated_by", "rfc": 6944, "answer": []}
+{"id": "fact-6944-update_count", "question": "How many RFCs have updated RFC 6944?", "kind": "facts", "field": "update_count", "rfc": 6944, "answer": 0}
+{"id": "fact-7766-current", "question": "Is RFC 7766 still current?", "kind": "facts", "field": "current", "rfc": 7766, "answer": true}
+{"id": "fact-7766-replaced", "question": "Has RFC 7766 been replaced?", "kind": "facts", "field": "replaced", "rfc": 7766, "answer": false}
+{"id": "fact-7766-obsoleted_by", "question": "What replaced RFC 7766?", "kind": "facts", "field": "obsoleted_by", "rfc": 7766, "answer": []}
+{"id": "fact-7766-updated_by", "question": "What updates RFC 7766?", "kind": "facts", "field": "updated_by", "rfc": 7766, "answer": [8490, 9103]}
+{"id": "fact-7766-update_count", "question": "How many RFCs have updated RFC 7766?", "kind": "facts", "field": "update_count", "rfc": 7766, "answer": 2}
+{"id": "fact-8020-current", "question": "Is RFC 8020 still current?", "kind": "facts", "field": "current", "rfc": 8020, "answer": true}
+{"id": "fact-8020-replaced", "question": "Has RFC 8020 been replaced?", "kind": "facts", "field": "replaced", "rfc": 8020, "answer": false}
+{"id": "fact-8020-obsoleted_by", "question": "What replaced RFC 8020?", "kind": "facts", "field": "obsoleted_by", "rfc": 8020, "answer": []}
+{"id": "fact-8020-updated_by", "question": "What updates RFC 8020?", "kind": "facts", "field": "updated_by", "rfc": 8020, "answer": []}
+{"id": "fact-8020-update_count", "question": "How many RFCs have updated RFC 8020?", "kind": "facts", "field": "update_count", "rfc": 8020, "answer": 0}
+{"id": "fact-8198-current", "question": "Is RFC 8198 still current?", "kind": "facts", "field": "current", "rfc": 8198, "answer": true}
+{"id": "fact-8198-replaced", "question": "Has RFC 8198 been replaced?", "kind": "facts", "field": "replaced", "rfc": 8198, "answer": false}
+{"id": "fact-8198-obsoleted_by", "question": "What replaced RFC 8198?", "kind": "facts", "field": "obsoleted_by", "rfc": 8198, "answer": []}
+{"id": "fact-8198-updated_by", "question": "What updates RFC 8198?", "kind": "facts", "field": "updated_by", "rfc": 8198, "answer": [9077]}
+{"id": "fact-8198-update_count", "question": "How many RFCs have updated RFC 8198?", "kind": "facts", "field": "update_count", "rfc": 8198, "answer": 1}
+{"id": "fact-8482-current", "question": "Is RFC 8482 still current?", "kind": "facts", "field": "current", "rfc": 8482, "answer": true}
+{"id": "fact-8482-replaced", "question": "Has RFC 8482 been replaced?", "kind": "facts", "field": "replaced", "rfc": 8482, "answer": false}
+{"id": "fact-8482-obsoleted_by", "question": "What replaced RFC 8482?", "kind": "facts", "field": "obsoleted_by", "rfc": 8482, "answer": []}
+{"id": "fact-8482-updated_by", "question": "What updates RFC 8482?", "kind": "facts", "field": "updated_by", "rfc": 8482, "answer": []}
+{"id": "fact-8482-update_count", "question": "How many RFCs have updated RFC 8482?", "kind": "facts", "field": "update_count", "rfc": 8482, "answer": 0}
+{"id": "fact-8490-current", "question": "Is RFC 8490 still current?", "kind": "facts", "field": "current", "rfc": 8490, "answer": true}
+{"id": "fact-8490-replaced", "question": "Has RFC 8490 been replaced?", "kind": "facts", "field": "replaced", "rfc": 8490, "answer": false}
+{"id": "fact-8490-obsoleted_by", "question": "What replaced RFC 8490?", "kind": "facts", "field": "obsoleted_by", "rfc": 8490, "answer": []}
+{"id": "fact-8490-updated_by", "question": "What updates RFC 8490?", "kind": "facts", "field": "updated_by", "rfc": 8490, "answer": []}
+{"id": "fact-8490-update_count", "question": "How many RFCs have updated RFC 8490?", "kind": "facts", "field": "update_count", "rfc": 8490, "answer": 0}
+{"id": "fact-8499-current", "question": "Is RFC 8499 still current?", "kind": "facts", "field": "current", "rfc": 8499, "answer": false}
+{"id": "fact-8499-replaced", "question": "Has RFC 8499 been replaced?", "kind": "facts", "field": "replaced", "rfc": 8499, "answer": true}
+{"id": "fact-8499-obsoleted_by", "question": "What replaced RFC 8499?", "kind": "facts", "field": "obsoleted_by", "rfc": 8499, "answer": [9499]}
+{"id": "fact-8499-updated_by", "question": "What updates RFC 8499?", "kind": "facts", "field": "updated_by", "rfc": 8499, "answer": []}
+{"id": "fact-8499-update_count", "question": "How many RFCs have updated RFC 8499?", "kind": "facts", "field": "update_count", "rfc": 8499, "answer": 0}
+{"id": "fact-8767-current", "question": "Is RFC 8767 still current?", "kind": "facts", "field": "current", "rfc": 8767, "answer": true}
+{"id": "fact-8767-replaced", "question": "Has RFC 8767 been replaced?", "kind": "facts", "field": "replaced", "rfc": 8767, "answer": false}
+{"id": "fact-8767-obsoleted_by", "question": "What replaced RFC 8767?", "kind": "facts", "field": "obsoleted_by", "rfc": 8767, "answer": []}
+{"id": "fact-8767-updated_by", "question": "What updates RFC 8767?", "kind": "facts", "field": "updated_by", "rfc": 8767, "answer": []}
+{"id": "fact-8767-update_count", "question": "How many RFCs have updated RFC 8767?", "kind": "facts", "field": "update_count", "rfc": 8767, "answer": 0}
+{"id": "fact-8945-current", "question": "Is RFC 8945 still current?", "kind": "facts", "field": "current", "rfc": 8945, "answer": true}
+{"id": "fact-8945-replaced", "question": "Has RFC 8945 been replaced?", "kind": "facts", "field": "replaced", "rfc": 8945, "answer": false}
+{"id": "fact-8945-obsoleted_by", "question": "What replaced RFC 8945?", "kind": "facts", "field": "obsoleted_by", "rfc": 8945, "answer": []}
+{"id": "fact-8945-updated_by", "question": "What updates RFC 8945?", "kind": "facts", "field": "updated_by", "rfc": 8945, "answer": []}
+{"id": "fact-8945-update_count", "question": "How many RFCs have updated RFC 8945?", "kind": "facts", "field": "update_count", "rfc": 8945, "answer": 0}
+{"id": "fact-9077-current", "question": "Is RFC 9077 still current?", "kind": "facts", "field": "current", "rfc": 9077, "answer": true}
+{"id": "fact-9077-replaced", "question": "Has RFC 9077 been replaced?", "kind": "facts", "field": "replaced", "rfc": 9077, "answer": false}
+{"id": "fact-9077-obsoleted_by", "question": "What replaced RFC 9077?", "kind": "facts", "field": "obsoleted_by", "rfc": 9077, "answer": []}
+{"id": "fact-9077-updated_by", "question": "What updates RFC 9077?", "kind": "facts", "field": "updated_by", "rfc": 9077, "answer": []}
+{"id": "fact-9077-update_count", "question": "How many RFCs have updated RFC 9077?", "kind": "facts", "field": "update_count", "rfc": 9077, "answer": 0}
+{"id": "fact-9103-current", "question": "Is RFC 9103 still current?", "kind": "facts", "field": "current", "rfc": 9103, "answer": true}
+{"id": "fact-9103-replaced", "question": "Has RFC 9103 been replaced?", "kind": "facts", "field": "replaced", "rfc": 9103, "answer": false}
+{"id": "fact-9103-obsoleted_by", "question": "What replaced RFC 9103?", "kind": "facts", "field": "obsoleted_by", "rfc": 9103, "answer": []}
+{"id": "fact-9103-updated_by", "question": "What updates RFC 9103?", "kind": "facts", "field": "updated_by", "rfc": 9103, "answer": []}
+{"id": "fact-9103-update_count", "question": "How many RFCs have updated RFC 9103?", "kind": "facts", "field": "update_count", "rfc": 9103, "answer": 0}
+{"id": "fact-9471-current", "question": "Is RFC 9471 still current?", "kind": "facts", "field": "current", "rfc": 9471, "answer": true}
+{"id": "fact-9471-replaced", "question": "Has RFC 9471 been replaced?", "kind": "facts", "field": "replaced", "rfc": 9471, "answer": false}
+{"id": "fact-9471-obsoleted_by", "question": "What replaced RFC 9471?", "kind": "facts", "field": "obsoleted_by", "rfc": 9471, "answer": []}
+{"id": "fact-9471-updated_by", "question": "What updates RFC 9471?", "kind": "facts", "field": "updated_by", "rfc": 9471, "answer": []}
+{"id": "fact-9471-update_count", "question": "How many RFCs have updated RFC 9471?", "kind": "facts", "field": "update_count", "rfc": 9471, "answer": 0}
+{"id": "fact-9499-current", "question": "Is RFC 9499 still current?", "kind": "facts", "field": "current", "rfc": 9499, "answer": true}
+{"id": "fact-9499-replaced", "question": "Has RFC 9499 been replaced?", "kind": "facts", "field": "replaced", "rfc": 9499, "answer": false}
+{"id": "fact-9499-obsoleted_by", "question": "What replaced RFC 9499?", "kind": "facts", "field": "obsoleted_by", "rfc": 9499, "answer": []}
+{"id": "fact-9499-updated_by", "question": "What updates RFC 9499?", "kind": "facts", "field": "updated_by", "rfc": 9499, "answer": []}
+{"id": "fact-9499-update_count", "question": "How many RFCs have updated RFC 9499?", "kind": "facts", "field": "update_count", "rfc": 9499, "answer": 0}
+{"id": "fact-9520-current", "question": "Is RFC 9520 still current?", "kind": "facts", "field": "current", "rfc": 9520, "answer": true}
+{"id": "fact-9520-replaced", "question": "Has RFC 9520 been replaced?", "kind": "facts", "field": "replaced", "rfc": 9520, "answer": false}
+{"id": "fact-9520-obsoleted_by", "question": "What replaced RFC 9520?", "kind": "facts", "field": "obsoleted_by", "rfc": 9520, "answer": []}
+{"id": "fact-9520-updated_by", "question": "What updates RFC 9520?", "kind": "facts", "field": "updated_by", "rfc": 9520, "answer": []}
+{"id": "fact-9520-update_count", "question": "How many RFCs have updated RFC 9520?", "kind": "facts", "field": "update_count", "rfc": 9520, "answer": 0}
+{"id": "fact-9619-current", "question": "Is RFC 9619 still current?", "kind": "facts", "field": "current", "rfc": 9619, "answer": true}
+{"id": "fact-9619-replaced", "question": "Has RFC 9619 been replaced?", "kind": "facts", "field": "replaced", "rfc": 9619, "answer": false}
+{"id": "fact-9619-obsoleted_by", "question": "What replaced RFC 9619?", "kind": "facts", "field": "obsoleted_by", "rfc": 9619, "answer": []}
+{"id": "fact-9619-updated_by", "question": "What updates RFC 9619?", "kind": "facts", "field": "updated_by", "rfc": 9619, "answer": []}
+{"id": "fact-9619-update_count", "question": "How many RFCs have updated RFC 9619?", "kind": "facts", "field": "update_count", "rfc": 9619, "answer": 0}
+{"id": "fact-9824-current", "question": "Is RFC 9824 still current?", "kind": "facts", "field": "current", "rfc": 9824, "answer": true}
+{"id": "fact-9824-replaced", "question": "Has RFC 9824 been replaced?", "kind": "facts", "field": "replaced", "rfc": 9824, "answer": false}
+{"id": "fact-9824-obsoleted_by", "question": "What replaced RFC 9824?", "kind": "facts", "field": "obsoleted_by", "rfc": 9824, "answer": []}
+{"id": "fact-9824-updated_by", "question": "What updates RFC 9824?", "kind": "facts", "field": "updated_by", "rfc": 9824, "answer": []}
+{"id": "fact-9824-update_count", "question": "How many RFCs have updated RFC 9824?", "kind": "facts", "field": "update_count", "rfc": 9824, "answer": 0}
+{"id": "fact-9905-current", "question": "Is RFC 9905 still current?", "kind": "facts", "field": "current", "rfc": 9905, "answer": true}
+{"id": "fact-9905-replaced", "question": "Has RFC 9905 been replaced?", "kind": "facts", "field": "replaced", "rfc": 9905, "answer": false}
+{"id": "fact-9905-obsoleted_by", "question": "What replaced RFC 9905?", "kind": "facts", "field": "obsoleted_by", "rfc": 9905, "answer": []}
+{"id": "fact-9905-updated_by", "question": "What updates RFC 9905?", "kind": "facts", "field": "updated_by", "rfc": 9905, "answer": []}
+{"id": "fact-9905-update_count", "question": "How many RFCs have updated RFC 9905?", "kind": "facts", "field": "update_count", "rfc": 9905, "answer": 0}

@@ -55,11 +55,23 @@ Everything runs locally.
 
 Swappable via one adapter: any OpenAI-compatible endpoint, including Apple Foundation Models and OpenAI itself.
 
-## Evaluation *(planned)*
+## Evaluation
 
-The supersession graph is published metadata, so gold labels for the `facts` route are generated, not hand-written. Baseline is Postgres full-text search alone; every addition must beat it on the eval set or be dropped.
+Two sets. **380 fact questions** are generated from the supersession graph, so their gold answers are published metadata rather than opinion. **20 passage questions** are hand-written, with every gold section verified to exist in the corpus before the set is accepted.
 
-Early signal on a 4-question probe: full-text search 1/4, embeddings 4/4 — full-text found nothing when the question shared no vocabulary with the text ("stop someone forging fake DNS answers" vs "origin authentication"). Four questions prove nothing; it is recorded here as the reason the eval set is being built before the retrieval work.
+Baseline is Postgres full-text search alone. Measured over the passage set:
+
+| Retrieval | R@1 | R@5 | R@10 | MRR |
+|---|---|---|---|---|
+| Full-text, all terms required | 0.10 | 0.25 | 0.30 | 0.148 |
+| Full-text, any term | 0.05 | 0.10 | 0.15 | 0.067 |
+
+That is a weak baseline, deliberately published as-is. Two things it already shows:
+
+- Requiring every query term beats matching any of them, because common words ("DNS", "record") otherwise dominate the ranking.
+- Obsolete documents rank at the top — RFC 882 (replaced in 1987) and RFC 2065 (replaced in 1999) are returned as best matches. That is the problem this project exists to fix, visible in its own baseline.
+
+Every retrieval change from here is measured against these numbers.
 
 ## Running it
 

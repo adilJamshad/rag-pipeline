@@ -57,21 +57,36 @@ Swappable via one adapter: any OpenAI-compatible endpoint, including Apple Found
 
 ## Evaluation
 
-Two sets. **380 fact questions** are generated from the supersession graph, so their gold answers are published metadata rather than opinion. **20 passage questions** are hand-written, with every gold section verified to exist in the corpus before the set is accepted.
+Three sets. **380 fact questions** are generated from the supersession graph, so their gold answers are published metadata rather than opinion. **20 passage questions** and **12 identifier questions** are hand-written, with every gold section verified to exist in the corpus before the set is accepted.
 
-Baseline is Postgres full-text search alone. Measured over the passage set:
+Retrieval, measured end to end:
 
-| Retrieval | R@1 | R@5 | R@10 | MRR |
-|---|---|---|---|---|
-| Full-text, all terms required | 0.10 | 0.25 | 0.30 | 0.148 |
-| Full-text, any term | 0.05 | 0.10 | 0.15 | 0.067 |
+| Method | passages R@1 | R@5 | R@10 | MRR | identifiers R@5 | MRR |
+|---|---|---|---|---|---|---|
+| Full-text, all terms | 0.10 | 0.25 | 0.30 | 0.148 | 1.00 | 0.674 |
+| Full-text, any term | 0.05 | 0.10 | 0.15 | 0.067 | 0.33 | 0.158 |
+| **Semantic (bge-small)** | **0.35** | **0.65** | **0.80** | **0.483** | **1.00** | **0.704** |
+| Hybrid (RRF) | 0.20 | 0.40 | 0.70 | 0.317 | 0.83 | 0.604 |
 
-That is a weak baseline, deliberately published as-is. Two things it already shows:
+### Three findings worth stating
 
-- Requiring every query term beats matching any of them, because common words ("DNS", "record") otherwise dominate the ranking.
-- Obsolete documents rank at the top — RFC 882 (replaced in 1987) and RFC 2065 (replaced in 1999) are returned as best matches. That is the problem this project exists to fix, visible in its own baseline.
+**1. Semantic search beats full-text by 2.7x on natural-language questions** — 0.30 to 0.80 at R@10.
 
-Every retrieval change from here is measured against these numbers.
+**2. Hybrid search makes things worse, at every weighting.** Sweeping the keyword weight into reciprocal rank fusion gives a monotonic decline:
+
+| keyword weight | 0.0 | 0.1 | 0.25 | 0.5 | 1.0 | 2.0 |
+|---|---|---|---|---|---|---|
+| passages MRR | **0.483** | 0.404 | 0.338 | 0.322 | 0.317 | 0.192 |
+
+The optimum is zero keyword. RRF assumes the rankers it merges are comparably good; here full-text is weak enough that mixing it in only adds noise. Hybrid retrieval is standard advice, and on this corpus it is wrong.
+
+**3. Full-text does not win even on exact identifiers.** The identifier set ("NSEC3", "QDCOUNT", "SOA RDATA format") was built specifically to be full-text's best case. Both methods reach R@5 1.00 and semantic still ranks better (MRR 0.704 vs 0.674).
+
+So the shipped default is semantic alone. Full-text and hybrid stay in the codebase because the measurement is part of the result.
+
+### Honest limits
+
+32 hand-labelled questions is a small sample and the confidence intervals are wide. Several "misses" are arguably correct — asked "what is a stub resolver?", retrieval returns RFC 4033 §7 *Stub Resolver Considerations* while the gold is RFC 1034 §5.3.1, so true quality is likely higher than 0.80. The fact set is large (380) but easy; it tests the SQL route, which cannot hallucinate by construction.
 
 ## Running it
 

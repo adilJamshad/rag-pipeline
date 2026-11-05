@@ -54,3 +54,15 @@ Route by rule, not by model. Log which path each question took.
 - No explanatory comments in code. Only a one-line `shortcut: <limit>, <when to upgrade>` where a deliberate corner was cut.
 - Every new non-trivial branch, parser or scoring function gets a small test.
 - Measure before optimising. Full-text search is the baseline and may win; report it honestly either way.
+
+## Measured retrieval results
+
+Semantic alone is the default. Measured on 20 passage + 12 identifier questions:
+
+| | passages R@10 | passages MRR | identifiers MRR |
+|---|---|---|---|
+| full-text (all terms) | 0.30 | 0.148 | 0.674 |
+| semantic | **0.80** | **0.483** | **0.704** |
+| hybrid RRF | 0.70 | 0.317 | 0.604 |
+
+**Hybrid is worse at every keyword weight** (MRR 0.483 at weight 0, declining monotonically to 0.192 at weight 2.0). Do not reintroduce hybrid as the default without numbers that beat 0.483. Full-text does not win even on identifier queries, which were chosen to favour it.

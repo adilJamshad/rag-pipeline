@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable
 
-from .search import Hit, keyword
+from .search import Hit, hybrid, keyword, semantic
 
 EVAL = Path("eval")
 
@@ -35,8 +35,9 @@ def _rank_of_gold(hits: list[Hit], gold: list[dict]) -> int | None:
     return None
 
 
-def score(name: str, retrieve: Callable[[str, int], list[Hit]], k: int = 10) -> Result:
-    questions = load("passages")
+def score(name: str, retrieve: Callable[[str, int], list[Hit]], k: int = 10,
+          dataset: str = "passages") -> Result:
+    questions = load(dataset)
     ranks = [_rank_of_gold(retrieve(q["question"], k), q["gold"]) for q in questions]
     n = len(ranks)
     at = lambda cut: sum(1 for r in ranks if r and r <= cut) / n
@@ -53,12 +54,24 @@ def misses(retrieve: Callable[[str, int], list[Hit]], k: int = 10) -> list[tuple
     return out
 
 
+RUNS = {
+    "keyword (all)": lambda q, k: keyword(q, k, mode="all"),
+    "keyword (any)": lambda q, k: keyword(q, k, mode="any"),
+    "semantic": lambda q, k: semantic(q, k),
+    "hybrid": lambda q, k: hybrid(q, k),
+    "hybrid, current only": lambda q, k: hybrid(q, k, current_only=True),
+}
+
+
 if __name__ == "__main__":
-    print(score("keyword (any)", lambda q, k: keyword(q, k, mode="any")))
-    print(score("keyword (all)", lambda q, k: keyword(q, k, mode="all")))
+    for dataset in ("passages", "identifiers"):
+        print(f"--- {dataset} ---")
+        for name, fn in RUNS.items():
+            print(score(name, fn, dataset=dataset))
+        print()
     print()
-    print("misses (keyword any):")
-    for question, gold, hits in misses(lambda q, k: keyword(q, k, mode="any")):
+    print("misses (hybrid):")
+    for question, gold, hits in misses(lambda q, k: hybrid(q, k)):
         want = ", ".join(f"RFC {g['rfc']} §{g['number']}" for g in gold)
         got = hits[0].cite if hits else "nothing"
         print(f"  {question[:52]:<54} want {want:<28} got {got[:40]}")

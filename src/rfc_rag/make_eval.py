@@ -34,12 +34,12 @@ def facts() -> list[dict]:
     return out
 
 
-def passages() -> list[dict]:
-    from passages import PASSAGES
+def curated(module: str, variable: str, prefix: str) -> list[dict]:
+    seeds = getattr(__import__(module), variable)
 
     out, missing = [], []
     with connect() as conn, conn.cursor() as cur:
-        for i, (question, gold) in enumerate(PASSAGES, 1):
+        for i, (question, gold) in enumerate(seeds, 1):
             resolved = []
             for rfc, number in gold:
                 cur.execute(
@@ -52,8 +52,8 @@ def passages() -> list[dict]:
                 resolved.append({"rfc": rfc, "number": number, "anchors": anchors})
             if resolved:
                 out.append({
-                    "id": f"passage-{i:02d}", "question": question,
-                    "kind": "passage", "gold": resolved,
+                    "id": f"{prefix}-{i:02d}", "question": question,
+                    "kind": prefix, "gold": resolved,
                 })
     if missing:
         raise SystemExit(f"gold sections not found in the corpus: {missing}")
@@ -62,7 +62,12 @@ def passages() -> list[dict]:
 
 if __name__ == "__main__":
     OUT.mkdir(exist_ok=True)
-    for name, rows in (("facts", facts()), ("passages", passages())):
+    datasets = (
+        ("facts", facts()),
+        ("passages", curated("passages", "PASSAGES", "passage")),
+        ("identifiers", curated("identifiers", "IDENTIFIERS", "identifier")),
+    )
+    for name, rows in datasets:
         ids = [r["id"] for r in rows]
         assert len(ids) == len(set(ids)), f"duplicate ids in {name}"
         with (OUT / f"{name}.jsonl").open("w") as fh:

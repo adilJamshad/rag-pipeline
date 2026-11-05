@@ -88,6 +88,24 @@ So the shipped default is semantic alone. Full-text and hybrid stay in the codeb
 
 32 hand-labelled questions is a small sample and the confidence intervals are wide. Several "misses" are arguably correct — asked "what is a stub resolver?", retrieval returns RFC 4033 §7 *Stub Resolver Considerations* while the gold is RFC 1034 §5.3.1, so true quality is likely higher than 0.80. The fact set is large (380) but easy; it tests the SQL route, which cannot hallucinate by construction.
 
+## What I expected vs what I measured
+
+Every row here was a belief I held before building, overturned by a measurement. The reasons matter more than the scores.
+
+| # | What I expected | What I measured | Why |
+|---|---|---|---|
+| 1 | A 128k context window makes retrieval unnecessary for one document | Whole RFC 1035: **82s, no answer**. Retrieved section: **2.0s, correct with quotes** | Prefill dominates (57s for 24.5k tokens) and reasoning tokens consumed the entire output budget before any answer was produced |
+| 2 | Hybrid search (keyword + semantic) beats either alone — standard practice | Hybrid **MRR 0.317** vs semantic **0.483**; worse at every weight tested | Reciprocal rank fusion scores `weight/(60+rank)` with no term for ranker quality, so both get an equal vote. Keyword is right at rank 1 only 10% of the time, so ~90% of its votes push correct results down |
+| 3 | Keyword search wins on exact identifiers like NSEC3 and QDCOUNT | Both reach R@5 1.00; semantic still ranks better (**0.704** vs 0.674) | Sections are embedded as *title + body*, and RFC titles **are** the identifiers. Removing titles halved identifier MRR to 0.353, confirming the embedding already carried the lexical capability |
+| 4 | Postgres full-text search is roughly BM25 | Matching *any* term (0.15) scored **worse** than requiring *all* terms (0.30) | `ts_rank` uses only within-document frequency and position. It has no corpus statistics, so no rarity weighting — matching "DNS" counts as much as matching "QDCOUNT" |
+| 5 | The small local model hit its context limit around 6,000 words | It was a **safety guardrail** firing on repeated filler, not a size limit | Real prose established the actual ceiling at ~4k tokens. Synthetic test data produced a misleading failure mode |
+| 6 | Parse the canonical `.txt` RFCs | Parsed the HTML instead | The text files are paginated with form feeds that cut sentences mid-word — RFC 1035 contains 55 of them. The HTML carries `id="section-N.N"` anchors in every era, including 1981 |
+| 7 | One parser handles the corpus | **Three** document shapes | Modern RFCs nest `<section>` elements; legacy ones are flat `<pre>` with heading spans; five pre-2002 documents have no anchors at all and need paragraph chunking |
+| 8 | Excluding nested sections by tag check would prevent duplication | RFC 9110 parsed to **285k tokens** against a real size of ~110k | Nested sections are wrapped in `<div>`, so a parent's direct children are divs, not sections, and the check never fired. Nothing errored — the only signal was an implausible token count |
+| 9 | Gold labels could be derived automatically by substring match | 21 of 25 seeds hit the candidate ceiling; hand-labelling was unavoidable | Terms like "root", "compression" and "authoritative" appear across dozens of sections. Only the *supersession* labels could be generated, because those are published metadata |
+| 10 | The LLM answers the questions | Most questions need **no LLM at all** | "Is RFC 2065 current?" is a SQL lookup over published metadata. Routing it to a model adds latency and introduces the one failure mode the project exists to prevent |
+| 11 | A vector database would be needed | Postgres alone does facts, full-text and vectors | At 1,705 sections a separate vector store adds a join-by-hand problem and buys nothing. pgvector keeps supersession filtering in the same query |
+
 ## Running it
 
     uv sync

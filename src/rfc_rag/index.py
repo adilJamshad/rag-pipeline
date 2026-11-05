@@ -1,3 +1,4 @@
+import re
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -21,6 +22,9 @@ class Rfc:
     stream: str | None
     pages: int | None
     errata_url: str | None
+    keywords: list[str] = field(default_factory=list)
+    abstract: str = ""
+    wg: str | None = None
     obsoletes: list[int] = field(default_factory=list)
     updates: list[int] = field(default_factory=list)
 
@@ -61,6 +65,9 @@ def parse(path: Path) -> dict[int, Rfc]:
         year = entry.findtext(NS + "date/" + NS + "year")
         errata = entry.find(NS + "errata-url")
 
+        kw_node = entry.find(NS + "keywords")
+        abs_node = entry.find(NS + "abstract")
+
         out[number] = Rfc(
             number=number,
             title=(entry.findtext(NS + "title") or "").strip(),
@@ -69,10 +76,46 @@ def parse(path: Path) -> dict[int, Rfc]:
             stream=entry.findtext(NS + "stream"),
             pages=int(pages) if pages and pages.isdigit() else None,
             errata_url=errata.text if errata is not None else None,
+            keywords=[(k.text or "").strip() for k in kw_node] if kw_node is not None else [],
+            abstract=" ".join((t.text or "") for t in abs_node) if abs_node is not None else "",
+            wg=entry.findtext(NS + "wg_acronym"),
             obsoletes=refs("obsoletes"),
             updates=refs("updates"),
         )
     return out
+
+
+DNS_WORKING_GROUPS = {
+    "dnsop", "dnsext", "dnssec", "dnsind", "dnssd", "doh", "dprive", "dane",
+    "add", "deleg", "dbound", "dnsce", "namedroppers",
+}
+
+DNS_KEYWORDS = {
+    "dns", "dnssec", "domain name system", "domain name", "domain names",
+    "resolver", "name server", "nameserver", "zone", "doh", "dot", "doq",
+    "nsec", "nsec3", "dnskey", "rrsig", "tsig", "edns", "mdns", "dns-sd",
+    "resource record", "qname", "rcode", "tlsa", "dane",
+}
+
+TITLE_HINTS = re.compile(
+    r"\b(dns|dnssec|domain names?|name servers?|nameservers?|resolvers?|zone transfers?|"
+    r"resource records?|nsec3?|dnskey|rrsig|tsig|edns|mdns|dnssd)\b", re.I)
+
+EXCLUDE_TITLE = re.compile(r"\b(april fool|april 1)\b", re.I)
+
+
+def is_dns(r: Rfc) -> bool:
+    if EXCLUDE_TITLE.search(r.title):
+        return False
+    if r.wg and r.wg.lower() in DNS_WORKING_GROUPS:
+        return True
+    if any(k.strip().lower() in DNS_KEYWORDS for k in r.keywords):
+        return True
+    return bool(TITLE_HINTS.search(r.title))
+
+
+def by_topic(rfcs: dict[int, Rfc]) -> set[int]:
+    return {n for n, r in rfcs.items() if is_dns(r)}
 
 
 def slice_for(rfcs: dict[int, Rfc], seeds: list[int], hops: int = 2) -> set[int]:

@@ -10,7 +10,7 @@ SEEDS = [1034, 1035]
 
 def load_index(seeds: list[int] = SEEDS) -> tuple[set[int], set[int]]:
     rfcs = index.parse(index.download(DATA / "rfc-index.xml"))
-    core = index.slice_for(rfcs, seeds)
+    core = index.by_topic(rfcs) | index.slice_for(rfcs, seeds)
     keep = index.closure(rfcs, core)
 
     rows = [

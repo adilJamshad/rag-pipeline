@@ -12,7 +12,9 @@ Corollary: quote RFC text verbatim. Never paraphrase a specification.
 
 ## Scope
 
-DNS slice only: RFC 1034 and 1035 plus everything that updates them, plus one hop. 70 RFCs, ~1,200 pages. Do not ingest all 9,854 RFCs without a decision to widen.
+Every DNS-related RFC, selected by working group, index keywords and title (`index.is_dns`), then closed over the supersession graph. 417 documents, 9,572 sections, 3.6M tokens.
+
+**Do not revert to graph-based selection.** Choosing the corpus by following updates/obsoletes out from RFC 1034/1035 excluded DoH, DoT, DoQ, mDNS, DNS-SD, DANE, NSEC3, Client Subnet, Extended DNS Errors and SVCB — new protocols reference the base specs, they do not update them. `test_topic_corpus_includes_modern_dns_rfcs` guards this.
 
 Not in scope: auth, chat history, agents, fine-tuning, multimodal.
 
@@ -55,14 +57,21 @@ Route by rule, not by model. Log which path each question took.
 - Every new non-trivial branch, parser or scoring function gets a small test.
 - Measure before optimising. Full-text search is the baseline and may win; report it honestly either way.
 
-## Measured retrieval results
+## Measured results
 
-Semantic alone is the default. Measured on 20 passage + 12 identifier questions:
+Semantic is the default. 30 answerable questions, gold document named from the domain before searching:
 
-| | passages R@10 | passages MRR | identifiers MRR |
-|---|---|---|---|
-| full-text (all terms) | 0.30 | 0.148 | 0.674 |
-| semantic | **0.80** | **0.483** | **0.704** |
-| hybrid RRF | 0.70 | 0.317 | 0.604 |
+| | doc@1 | doc@5 | doc@10 | MRR |
+|---|---|---|---|---|
+| full-text (all terms) | 0.20 | 0.50 | 0.60 | 0.333 |
+| semantic | 0.27 | **0.73** | **0.83** | **0.441** |
+| hybrid RRF | **0.30** | 0.57 | 0.70 | 0.424 |
 
-**Hybrid is worse at every keyword weight** (MRR 0.483 at weight 0, declining monotonically to 0.192 at weight 2.0). Do not reintroduce hybrid as the default without numbers that beat 0.483. Full-text does not win even on identifier queries, which were chosen to favour it.
+Answers: 29/30 answered, 29/29 contained the expected fact, 25/29 quotes verified verbatim, 20/29 cited the authoritative RFC, 7/10 unanswerable correctly refused.
+
+Notes for anyone changing retrieval:
+
+- Hybrid has the best doc@1 but loses on MRR and doc@10. On the earlier 76-document corpus it lost on everything, so that claim was corpus-specific and has been softened in the README.
+- Refusal got **worse** as the corpus grew (9/10 to 7/10). "How do I configure BIND9?" is now answered because RFC 2308 §9.2 is titled "BIND".
+- The correctness check is a substring match (`expect` in eval/questions.py). It is lenient; treat 29/29 as "not wildly wrong", not as accuracy.
+- Gold sections within the correct RFC are chosen by embedding similarity, so only document-level retrieval numbers are independent.

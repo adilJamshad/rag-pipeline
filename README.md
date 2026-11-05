@@ -40,89 +40,52 @@ The model here has a 128k context. The whole corpus does not fit, but a single R
 
 ## Scope
 
-DNS family: RFC 1034 and 1035, everything that updates them, plus one hop. **70 RFCs, 1,207 pages, ~800k tokens.** 20 of those 70 are already obsolete and 31 carry errata, so all three failure modes are live inside the slice.
+**417 RFCs, 9,572 sections, 3.6M tokens** — every DNS-related RFC, selected by working group, index keywords and title, then closed over the supersession graph.
 
-Deliberately excluded: auth, chat history, agents, fine-tuning, the other 9,784 RFCs.
+An earlier version selected the corpus by following `updates`/`obsoletes` links out from RFC 1034 and 1035. That rule is wrong in a way worth recording: **new protocols do not update old ones, they reference them**, so it silently excluded DNS over HTTPS, DNS over TLS, DNS over QUIC, Multicast DNS, DNS-SD, DANE, NSEC3, Client Subnet, Extended DNS Errors and SVCB — twelve of fifteen major DNS RFCs, and most of what anyone asks about today.
 
-## Stack
+It also corrupted the evaluation. The old identifier set asked about *NSEC3* and scored 1.00, while RFC 5155 — the document that defines NSEC3 — was not in the corpus at all. The gold pointed at two passing mentions elsewhere. The set could not detect the omission because it had been built by searching the corpus instead of from the domain.
 
-Everything runs locally.
-
-- **Postgres 17 + pgvector 0.8.7** (port 5433) — facts, full-text search and vectors in one database, so retrieval can be filtered by supersession status in the same query
-- **gpt-oss-20b** via oMLX — answer generation
-- **bge-small-en-v1.5** (384 dims) — embeddings
-- Python 3.12, `uv`
-
-Swappable via one adapter: any OpenAI-compatible endpoint, including Apple Foundation Models and OpenAI itself.
+Deliberately excluded: auth, chat history, agents, fine-tuning, the other ~9,500 non-DNS RFCs.
 
 ## Evaluation
 
-Three sets. **380 fact questions** are generated from the supersession graph, so their gold answers are published metadata rather than opinion. **20 passage questions** and **12 identifier questions** are hand-written, with every gold section verified to exist in the corpus before the set is accepted.
+Questions are written **before** looking at the corpus, and each names the RFC that should authoritatively answer it, from domain knowledge. Retrieval is therefore scored at document level against a gold document that search did not choose.
 
-Retrieval, measured end to end:
+**30 answerable questions · 10 unanswerable · 2,085 generated fact questions.**
 
-| Method | passages R@1 | R@5 | R@10 | MRR | identifiers R@5 | MRR |
-|---|---|---|---|---|---|---|
-| Full-text, all terms | 0.10 | 0.25 | 0.30 | 0.148 | 1.00 | 0.674 |
-| Full-text, any term | 0.05 | 0.10 | 0.15 | 0.067 | 0.33 | 0.158 |
-| **Semantic (bge-small)** | **0.35** | **0.65** | **0.80** | **0.483** | **1.00** | **0.704** |
-| Hybrid (RRF) | 0.20 | 0.40 | 0.70 | 0.317 | 0.83 | 0.604 |
+### Retrieval
 
-### Three findings worth stating
+| Method | doc@1 | doc@5 | doc@10 | MRR |
+|---|---|---|---|---|
+| Full-text (all terms) | 0.20 | 0.50 | 0.60 | 0.333 |
+| **Semantic** | 0.27 | **0.73** | **0.83** | **0.441** |
+| Hybrid (RRF) | **0.30** | 0.57 | 0.70 | 0.424 |
 
-**1. Semantic search beats full-text by 2.7x on natural-language questions** — 0.30 to 0.80 at R@10.
-
-**2. Hybrid search makes things worse, at every weighting.** Sweeping the keyword weight into reciprocal rank fusion gives a monotonic decline:
-
-| keyword weight | 0.0 | 0.1 | 0.25 | 0.5 | 1.0 | 2.0 |
-|---|---|---|---|---|---|---|
-| passages MRR | **0.483** | 0.404 | 0.338 | 0.322 | 0.317 | 0.192 |
-
-The optimum is zero keyword. RRF assumes the rankers it merges are comparably good; here full-text is weak enough that mixing it in only adds noise. Hybrid retrieval is standard advice, and on this corpus it is wrong.
-
-**3. Full-text does not win even on exact identifiers.** The identifier set ("NSEC3", "QDCOUNT", "SOA RDATA format") was built specifically to be full-text's best case. Both methods reach R@5 1.00 and semantic still ranks better (MRR 0.704 vs 0.674).
-
-So the shipped default is semantic alone. Full-text and hybrid stay in the codebase because the measurement is part of the result.
-
-### Honest limits
-
-32 hand-labelled questions is a small sample and the confidence intervals are wide. Several "misses" are arguably correct — asked "what is a stub resolver?", retrieval returns RFC 4033 §7 *Stub Resolver Considerations* while the gold is RFC 1034 §5.3.1, so true quality is likely higher than 0.80. The fact set is large (380) but easy; it tests the SQL route, which cannot hallucinate by construction.
-
-## Answering
-
-Three routes, chosen by rule:
-
-| Route | Decided by | Engine |
-|---|---|---|
-| `facts` | question names an RFC **and** asks about status | SQL only |
-| `synthesis` | anything else that retrieval can support | retrieval + LLM, must quote verbatim |
-| `refusal` | the model judges the retrieved sections insufficient | no answer given |
-
-Measured over 20 in-scope and 10 out-of-scope questions:
+### Answers
 
 | | |
 |---|---|
-| In-scope answered | 20/20 |
-| **Quote verified verbatim against the cited section** | **19/20** |
-| In-scope wrongly refused | 0/20 |
-| Out-of-scope correctly refused | 9/10 |
+| Answered | 29/30 |
+| **Contained the expected fact** | **29/29** |
+| Quote verified verbatim | 25/29 |
+| Cited the authoritative RFC | 20/29 |
+| False refusals | 1 |
+| Unanswerable correctly refused | **7/10** |
 
-Grounding is checked mechanically: the model's quote must appear character for character in a section it cited, after collapsing whitespace and trimming edge punctuation. No LLM judge is involved, so the number is not itself a model opinion.
+### Three results that corrected earlier claims
 
-The single refusal failure is the instructive one. *"Why is my website slow?"* produced fluent speculation about DNS timeouts and retries — plausible, in-domain, and unsupported. Off-topic questions are easy to refuse; adjacent-but-unanswerable ones are not.
+**1. "Hybrid search is worse" was too strong.** On the old 76-document corpus hybrid lost on every metric. On 417 documents it has the **best doc@1 of the three** (0.30 vs semantic's 0.27), while still losing on MRR and doc@10. The honest statement is that full-text contributes little here and hurts deep ranking, not that fusion is wrong.
 
-### Refusal cannot be thresholded on retrieval scores
+**2. A larger corpus made refusal harder, not easier.** Correct refusals fell from 9/10 to 7/10. *"How do I configure BIND9?"* is now answered, because RFC 2308 §9.2 is literally titled "BIND". More documents means more plausible-looking material for an unanswerable question to latch onto.
 
-The obvious design is a similarity cutoff. It does not work here. Comparing top-1 cosine similarity for 20 answerable and 10 unanswerable questions:
+**3. Correctness is measured, and the measure is weak.** Each question carries a string its answer must contain — "63", "853", "512". That caught zero errors, but several checks are lenient: *"What is an SVCB record?"* passes on the substring "service". It establishes that answers are not wildly wrong. It does not establish that they are right.
 
-| | min | median | max |
-|---|---|---|---|
-| answerable | 0.687 | 0.775 | 0.844 |
-| unanswerable | 0.396 | 0.629 | **0.688** |
+### What this evaluation still cannot tell you
 
-The distributions touch — the best unanswerable question scores higher than the worst answerable one. Score-gap variants (top1 minus top5, top1 minus mean, number of distinct RFCs retrieved) overlap completely too.
-
-So cosine similarity is not calibrated confidence, and refusal is delegated to the model reading the retrieved text. That is one of the few places in this system where the LLM is genuinely required.
+- **Section-level precision.** Gold sections are chosen by embedding similarity within the correct document, which is circular. Only the document-level number is independent.
+- **Whether the quote supports the answer.** Grounding proves the quote exists in a cited section, nothing more.
+- 30 questions is a small sample and I wrote all of them.
 
 ## What I expected vs what I measured
 

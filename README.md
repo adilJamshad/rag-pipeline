@@ -88,6 +88,42 @@ So the shipped default is semantic alone. Full-text and hybrid stay in the codeb
 
 32 hand-labelled questions is a small sample and the confidence intervals are wide. Several "misses" are arguably correct — asked "what is a stub resolver?", retrieval returns RFC 4033 §7 *Stub Resolver Considerations* while the gold is RFC 1034 §5.3.1, so true quality is likely higher than 0.80. The fact set is large (380) but easy; it tests the SQL route, which cannot hallucinate by construction.
 
+## Answering
+
+Three routes, chosen by rule:
+
+| Route | Decided by | Engine |
+|---|---|---|
+| `facts` | question names an RFC **and** asks about status | SQL only |
+| `synthesis` | anything else that retrieval can support | retrieval + LLM, must quote verbatim |
+| `refusal` | the model judges the retrieved sections insufficient | no answer given |
+
+Measured over 20 in-scope and 10 out-of-scope questions:
+
+| | |
+|---|---|
+| In-scope answered | 20/20 |
+| **Quote verified verbatim against the cited section** | **19/20** |
+| In-scope wrongly refused | 0/20 |
+| Out-of-scope correctly refused | 9/10 |
+
+Grounding is checked mechanically: the model's quote must appear character for character in a section it cited, after collapsing whitespace and trimming edge punctuation. No LLM judge is involved, so the number is not itself a model opinion.
+
+The single refusal failure is the instructive one. *"Why is my website slow?"* produced fluent speculation about DNS timeouts and retries — plausible, in-domain, and unsupported. Off-topic questions are easy to refuse; adjacent-but-unanswerable ones are not.
+
+### Refusal cannot be thresholded on retrieval scores
+
+The obvious design is a similarity cutoff. It does not work here. Comparing top-1 cosine similarity for 20 answerable and 10 unanswerable questions:
+
+| | min | median | max |
+|---|---|---|---|
+| answerable | 0.687 | 0.775 | 0.844 |
+| unanswerable | 0.396 | 0.629 | **0.688** |
+
+The distributions touch — the best unanswerable question scores higher than the worst answerable one. Score-gap variants (top1 minus top5, top1 minus mean, number of distinct RFCs retrieved) overlap completely too.
+
+So cosine similarity is not calibrated confidence, and refusal is delegated to the model reading the retrieved text. That is one of the few places in this system where the LLM is genuinely required.
+
 ## What I expected vs what I measured
 
 Every row here was a belief I held before building, overturned by a measurement. The reasons matter more than the scores.
@@ -105,6 +141,8 @@ Every row here was a belief I held before building, overturned by a measurement.
 | 9 | Gold labels could be derived automatically by substring match | 21 of 25 seeds hit the candidate ceiling; hand-labelling was unavoidable | Terms like "root", "compression" and "authoritative" appear across dozens of sections. Only the *supersession* labels could be generated, because those are published metadata |
 | 10 | The LLM answers the questions | Most questions need **no LLM at all** | "Is RFC 2065 current?" is a SQL lookup over published metadata. Routing it to a model adds latency and introduces the one failure mode the project exists to prevent |
 | 11 | A vector database would be needed | Postgres alone does facts, full-text and vectors | At 1,705 sections a separate vector store adds a join-by-hand problem and buys nothing. pgvector keeps supersession filtering in the same query |
+| 12 | A similarity threshold separates answerable from unanswerable questions | Distributions overlap: worst answerable **0.687**, best unanswerable **0.688** | Cosine similarity measures topical closeness, not whether a passage answers a question. "Write me a Python script to query DNS" is about DNS and retrieves DNS text; the specs simply do not answer it |
+| 13 | Demoting obsolete RFCs would improve the scores | MRR moved 0.483 → 0.488, but the top-5 for "SOA record fields" lost both dead 1983 documents | The eval set measures whether gold was found, not whether junk was avoided. A metric can miss a real user-facing improvement |
 
 ## Running it
 

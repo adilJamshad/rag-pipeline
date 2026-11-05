@@ -16,6 +16,7 @@ class Hit:
     title: str
     body: str
     score: float
+    obsolete: bool = False
 
     @property
     def cite(self) -> str:
@@ -42,7 +43,9 @@ def keyword(query: str, k: int = 5, mode: str = "any", current_only: bool = Fals
 
     sql = """
         select s.id, s.rfc, s.anchor, s.number, s.title, s.body,
-               ts_rank_cd(s.fts, q) as score
+               ts_rank_cd(s.fts, q) as score,
+               exists (select 1 from rfc_relation x
+                        where x.dst = s.rfc and x.kind = 'obsoletes') as obsolete
           from section s, to_tsquery('english', %s) q
          where s.fts @@ q
     """
@@ -70,21 +73,27 @@ def fuse(ranked: list[tuple[list[Hit], float]], k: int, rrf_k: int = 60) -> list
     return [Hit(**{**best[sid].__dict__, "score": score}) for sid, score in ordered]
 
 
-def semantic(query: str, k: int = 5, current_only: bool = False) -> list[Hit]:
+OBSOLETE = """exists (select 1 from rfc_relation x
+                      where x.dst = s.rfc and x.kind = 'obsoletes')"""
+
+
+def semantic(query: str, k: int = 5, current_only: bool = False,
+             demote: float = 0.0) -> list[Hit]:
     vector = llm.embed([query])[0]
 
-    sql = """
+    sql = f"""
         select s.id, s.rfc, s.anchor, s.number, s.title, s.body,
-               1 - (s.embedding <=> %s::vector) as score
+               1 - (s.embedding <=> %s::vector) - (case when {OBSOLETE} then %s else 0 end)
+                 as score,
+               {OBSOLETE} as obsolete
           from section s
          where s.embedding is not null
     """
-    params: list[object] = [str(vector)]
+    params: list[object] = [str(vector), demote]
     if current_only:
-        sql += """ and not exists (select 1 from rfc_relation x
-                                    where x.dst = s.rfc and x.kind = 'obsoletes')"""
-    sql += " order by s.embedding <=> %s::vector limit %s"
-    params += [str(vector), k]
+        sql += f" and not {OBSOLETE}"
+    sql += " order by score desc limit %s"
+    params.append(k)
 
     with connect() as conn, conn.cursor() as cur:
         cur.execute(sql, params)

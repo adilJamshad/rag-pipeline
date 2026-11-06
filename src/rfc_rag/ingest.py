@@ -14,7 +14,7 @@ def load_index(seeds: list[int] = SEEDS) -> tuple[set[int], set[int]]:
     keep = index.closure(rfcs, core)
 
     rows = [
-        (r.number, r.title, r.year, r.status, r.stream, r.pages, r.errata_url)
+        (r.number, r.title, r.year, r.status, r.stream, r.pages, r.errata_url, r.abstract)
         for n in sorted(keep)
         for r in [rfcs[n]]
     ]
@@ -29,12 +29,13 @@ def load_index(seeds: list[int] = SEEDS) -> tuple[set[int], set[int]]:
 
     with connect() as conn, conn.cursor() as cur:
         cur.executemany(
-            """insert into rfc (number, title, year, status, stream, pages, errata_url)
-               values (%s, %s, %s, %s, %s, %s, %s)
+            """insert into rfc (number, title, year, status, stream, pages, errata_url, abstract)
+               values (%s, %s, %s, %s, %s, %s, %s, %s)
                on conflict (number) do update set
                  title = excluded.title, year = excluded.year,
                  status = excluded.status, stream = excluded.stream,
-                 pages = excluded.pages, errata_url = excluded.errata_url""",
+                 pages = excluded.pages, errata_url = excluded.errata_url,
+                 abstract = excluded.abstract, embedding = null""",
             rows,
         )
         cur.executemany(

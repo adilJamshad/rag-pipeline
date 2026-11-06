@@ -3,8 +3,9 @@ import dataclasses
 import json
 import sys
 
-from .answer import Answer, ask
+from .answer import ask
 from .facts import Fact
+from .pipeline import Answer
 
 DIM, BOLD, RED, YELLOW, GREEN, OFF = "\033[2m", "\033[1m", "\033[31m", "\033[33m", "\033[32m", "\033[0m"
 
@@ -34,6 +35,29 @@ def _fact_block(fact: Fact) -> list[str]:
 
 def render(answer: Answer) -> str:
     lines = [""]
+
+    if answer.route == "passage":
+        source = answer.used[0]
+        flag = _c(RED, " [OBSOLETE]") if source.obsolete else ""
+        lines.append(_c(BOLD, source.cite) + flag)
+        lines.append("")
+        for line in answer.text.splitlines():
+            lines.append(f"  {line}")
+        lines.append("")
+        lines.append(_c(DIM, f"  {source.url}"))
+        if answer.status:
+            lines.append("")
+            lines.append(_c(YELLOW, "Check before relying on this:"))
+            for fact in answer.status:
+                if fact.obsolete:
+                    live = ", ".join(f"RFC {n}" for n, _ in fact.current)
+                    lines.append(f"  RFC {fact.rfc} is OBSOLETE - read {live}")
+                else:
+                    lines.append(f"  RFC {fact.rfc} is current but "
+                                 f"{len(fact.updated_by)} later RFCs updated it")
+        lines.append("")
+        lines.append(_c(DIM, f"route: passage  {answer.trace.total}s  llm calls: 0"))
+        return "\n".join(lines) + "\n"
 
     if answer.route == "refusal":
         lines.append(_c(YELLOW, "No answer found."))
@@ -69,8 +93,23 @@ def render(answer: Answer) -> str:
             flag = _c(RED, " [OBSOLETE]") if h.obsolete else ""
             lines.append(f"  {_c(DIM, h.cite)}{flag}")
 
+    if answer.status:
+        lines.append("")
+        lines.append(_c(YELLOW, "Check before relying on this:"))
+        for fact in answer.status:
+            if fact.obsolete:
+                live = ", ".join(f"RFC {n}" for n, _ in fact.current)
+                lines.append(f"  RFC {fact.rfc} is OBSOLETE - read {live}")
+            else:
+                lines.append(f"  RFC {fact.rfc} is current but {len(fact.updated_by)} "
+                             f"later RFCs updated it")
+
+    t = answer.trace
+    meta = f"route: {answer.route}  {t.total}s  llm calls: {t.llm_calls}"
+    if t.context_tokens:
+        meta += f"  context: ~{t.context_tokens} tok"
     lines.append("")
-    lines.append(_c(DIM, f"route: {answer.route}"))
+    lines.append(_c(DIM, meta))
     return "\n".join(lines) + "\n"
 
 
@@ -89,6 +128,9 @@ def main() -> int:
                            for h in answer.hits]
         payload["used"] = [{"rfc": h.rfc, "anchor": h.anchor, "cite": h.cite, "url": h.url}
                            for h in answer.used]
+        payload["status"] = [{"rfc": f.rfc, "obsolete": f.obsolete,
+                              "updated_by": f.updated_by,
+                              "current": [n for n, _ in f.current]} for f in answer.status]
         print(json.dumps(payload, indent=2, default=str))
     else:
         print(render(answer), end="")

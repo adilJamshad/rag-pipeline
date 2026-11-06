@@ -42,6 +42,31 @@ def run(batch: int = BATCH) -> int:
     return done
 
 
+def documents(batch: int = BATCH) -> int:
+    done = 0
+    with connect() as conn, conn.cursor() as cur:
+        cur.execute("""
+            select number, title, coalesce(abstract, '')
+              from rfc
+             where embedding is null
+               and exists (select 1 from section s where s.rfc = rfc.number)
+             order by number
+        """)
+        rows = cur.fetchall()
+        for i in range(0, len(rows), batch):
+            chunk = rows[i:i + batch]
+            vectors = llm.embed([f"{t}\n\n{a}"[:4000] for _, t, a in chunk])
+            cur.executemany(
+                "update rfc set embedding = %s::vector where number = %s",
+                [(str(v), n) for (n, _, _), v in zip(chunk, vectors)],
+            )
+            conn.commit()
+            done += len(chunk)
+    return done
+
+
 if __name__ == "__main__":
     n = run()
-    print(f"embedded {n} sections" if n else "nothing to embed")
+    print(f"embedded {n} sections" if n else "sections: nothing to embed")
+    d = documents()
+    print(f"embedded {d} documents" if d else "documents: nothing to embed")

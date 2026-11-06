@@ -78,7 +78,7 @@ OBSOLETE = """exists (select 1 from rfc_relation x
 
 
 def semantic(query: str, k: int = 5, current_only: bool = False,
-             demote: float = 0.0) -> list[Hit]:
+             demote: float = 0.0, only_rfc: int | None = None) -> list[Hit]:
     vector = llm.embed([query])[0]
 
     sql = f"""
@@ -92,6 +92,9 @@ def semantic(query: str, k: int = 5, current_only: bool = False,
     params: list[object] = [str(vector), demote]
     if current_only:
         sql += f" and not {OBSOLETE}"
+    if only_rfc is not None:
+        sql += " and s.rfc = %s"
+        params.append(only_rfc)
     sql += " order by score desc limit %s"
     params.append(k)
 

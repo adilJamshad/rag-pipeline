@@ -57,7 +57,12 @@ def answers() -> dict:
     refused = [(q, ask(q["question"])) for q in negatives]
     correctly_refused = [q for q, a in refused if a.route == "refusal"]
 
+    from collections import Counter
+    routes = Counter(a.route for _, a in results)
+    llm_calls = sum(a.trace.llm_calls for _, a in results)
     return {
+        "routes": dict(routes),
+        "llm_calls": llm_calls,
         "n": len(rows),
         "answered": len(answered),
         "correct": len(correct),
@@ -86,6 +91,8 @@ if __name__ == "__main__":
     print("=== answers ===")
     r = answers()
     print(f"  answerable           {r['n']}")
+    print(f"  routes               {r['routes']}")
+    print(f"  LLM calls            {r['llm_calls']}/{r['n']}")
     print(f"  answered             {r['answered']}/{r['n']}")
     print(f"  CORRECT              {r['correct']}/{r['answered']}")
     print(f"  grounded quote       {r['grounded']}/{r['answered']}")

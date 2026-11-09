@@ -116,7 +116,11 @@ src/rfc_rag/
   db.py                the Postgres connection
 
   clients/             things outside this process
-    llm.py             OpenAI-compatible chat + embeddings
+    base.py            the backend contract
+    llm.py             facade: picks a backend, falls back on failure
+    _direct.py         httpx against an OpenAI-compatible endpoint (default)
+    _langchain.py      ChatOpenAI + OpenAIEmbeddings
+    _llamaindex.py     OpenAILike + OpenAIEmbedding
 
   ingest/              the build pipeline, run as jobs
     rfc_index.py       parse rfc-index.xml, choose the corpus

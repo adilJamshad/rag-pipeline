@@ -14,6 +14,11 @@ rfc = "rfc_rag.interfaces.cli:main"
 
 [dependency-groups]
 dev = ["pytest>=8.0"]
+frameworks = [
+    "langchain-openai>=1.7.4",
+    "llama-index-embeddings-openai>=0.7.0",
+    "llama-index-llms-openai-like>=0.8.1",
+]
 
 [build-system]
 requires = ["hatchling"]

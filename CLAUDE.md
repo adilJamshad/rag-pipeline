@@ -48,6 +48,9 @@ Route by rule, not by model. Log which path each question took.
 
 - `models.py` holds **every** dataclass. Do not define a dataclass anywhere else.
 - `services/stages.py` is **pure** — no db, no network, no model. `services/answering.py` holds everything with side effects. Keep that line; it is why the suite runs without a model server.
+- `clients/` holds three interchangeable LLM backends behind `base.LLMBackend`. `_direct` is the default and the only one installed by default; `_langchain` and `_llamaindex` need `uv sync --group frameworks`. See `docs/ADAPTERS.md` for the measured comparison — do not switch the default without numbers.
+- Both frameworks need an escape hatch to pass `reasoning_effort` (`extra_body` for LangChain, `additional_kwargs` for LlamaIndex). Omit it and gpt-oss returns empty content.
+- `LLM_FALLBACKS` only protects against client-library failures, not server outages: every backend hits the same endpoint. Real redundancy is a second `LLM_BASE_URL`.
 - `clients/` wraps anything outside the process, `ingest/` builds the corpus, `services/` answers questions, `interfaces/` exposes it, `evaluation/` measures it.
 
 ## Commands

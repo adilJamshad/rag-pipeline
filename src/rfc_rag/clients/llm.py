@@ -1,79 +1,58 @@
-import json
+"""Backend-agnostic entry point.
 
-import httpx
+`LLM_BACKEND` picks the implementation; `LLM_FALLBACKS` names backends to try
+in order when the first raises. Every backend talks to the same
+OpenAI-compatible endpoint, so a fallback only helps when the failure is in the
+client library rather than the server.
+"""
+
+import importlib
+import logging
 
 from .. import config
+from .base import LLMError
+
+log = logging.getLogger(__name__)
+
+BACKENDS = {"direct": "._direct", "langchain": "._langchain", "llamaindex": "._llamaindex"}
+
+_loaded: dict[str, object] = {}
+last_used: str | None = None
 
 
-class LLMError(RuntimeError):
-    pass
+def load(name: str):
+    if name not in BACKENDS:
+        raise LLMError(f"unknown backend {name!r}, expected one of {sorted(BACKENDS)}")
+    if name not in _loaded:
+        try:
+            _loaded[name] = importlib.import_module(BACKENDS[name], __package__)
+        except ImportError as exc:
+            raise LLMError(f"backend {name!r} is not installed: {exc}") from exc
+    return _loaded[name]
 
 
-def _headers() -> dict[str, str]:
-    key = config.api_key()
-    h = {"Content-Type": "application/json"}
-    if key:
-        h["Authorization"] = f"Bearer {key}"
-    return h
+def chain() -> list[str]:
+    return [config.LLM_BACKEND, *config.LLM_FALLBACKS]
 
 
-def _parse_sse(text: str) -> str:
-    out = []
-    for line in text.splitlines():
-        if not line.startswith("data: "):
-            continue
-        payload = line[6:].strip()
-        if payload == "[DONE]":
-            break
-        chunk = json.loads(payload)
-        if "error" in chunk:
-            raise LLMError(chunk["error"].get("message", payload))
-        for choice in chunk.get("choices", []):
-            out.append(choice.get("delta", {}).get("content") or "")
-    return "".join(out)
+def _call(method: str, *args, **kwargs):
+    global last_used
+    errors = []
+    for name in chain():
+        try:
+            backend = load(name)
+            result = getattr(backend, method)(*args, **kwargs)
+            last_used = name
+            return result
+        except Exception as exc:
+            errors.append(f"{name}: {type(exc).__name__}: {exc}")
+            log.warning("llm backend %s failed on %s: %s", name, method, exc)
+    raise LLMError(f"all backends failed for {method}() -> " + " | ".join(errors))
 
 
 def complete(prompt: str, *, max_tokens: int = 800, temperature: float = 0.0) -> str:
-    body = {
-        "model": config.LLM_MODEL,
-        "messages": [{"role": "user", "content": prompt}],
-        "max_tokens": max_tokens,
-        "temperature": temperature,
-        "reasoning_effort": "low",
-    }
-    r = httpx.post(
-        f"{config.LLM_BASE_URL}/chat/completions",
-        json=body,
-        headers=_headers(),
-        timeout=600,
-    )
-    if "text/event-stream" in r.headers.get("content-type", ""):
-        return _parse_sse(r.text).strip()
-
-    r.raise_for_status()
-    data = r.json()
-    if "error" in data:
-        raise LLMError(str(data["error"]))
-    message = data["choices"][0]["message"]
-    content = (message.get("content") or "").strip()
-    if not content and message.get("reasoning_content"):
-        raise LLMError("empty content: reasoning consumed the max_tokens budget")
-    return content
+    return _call("complete", prompt, max_tokens=max_tokens, temperature=temperature)
 
 
 def embed(texts: list[str]) -> list[list[float]]:
-    r = httpx.post(
-        f"{config.LLM_BASE_URL}/embeddings",
-        json={"model": config.EMBED_MODEL, "input": texts},
-        headers=_headers(),
-        timeout=300,
-    )
-    r.raise_for_status()
-    data = r.json()
-    if "error" in data:
-        raise LLMError(str(data["error"]))
-    vectors = [d["embedding"] for d in data["data"]]
-    bad = {len(v) for v in vectors} - {config.EMBED_DIM}
-    if bad:
-        raise LLMError(f"expected dim {config.EMBED_DIM}, got {bad}")
-    return vectors
+    return _call("embed", texts)

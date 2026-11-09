@@ -1,6 +1,6 @@
 import pytest
 
-from rfc_rag.clients import llm
+from rfc_rag.clients import _direct, llm
 from rfc_rag.config import EMBED_DIM
 
 
@@ -22,13 +22,13 @@ def test_parse_sse_concatenates_deltas():
         'data: {"choices":[{"delta":{"content":"lo"}}]}\n'
         "data: [DONE]\n"
     )
-    assert llm._parse_sse(raw) == "Hello"
+    assert _direct._parse_sse(raw) == "Hello"
 
 
 def test_parse_sse_raises_on_error_event():
     raw = 'data: {"error":{"message":"context exceeded"}}\n'
     with pytest.raises(llm.LLMError, match="context exceeded"):
-        llm._parse_sse(raw)
+        _direct._parse_sse(raw)
 
 
 @live
@@ -45,3 +45,53 @@ def test_complete_answers_from_given_text():
         "labels          63 octets or less"
     )
     assert "63" in answer
+
+
+def test_unknown_backend_is_rejected():
+    with pytest.raises(llm.LLMError, match="unknown backend"):
+        llm.load("nope")
+
+
+def test_chain_is_backend_then_fallbacks(monkeypatch):
+    from rfc_rag import config
+    monkeypatch.setattr(config, "LLM_BACKEND", "direct")
+    monkeypatch.setattr(config, "LLM_FALLBACKS", ["langchain", "llamaindex"])
+    assert llm.chain() == ["direct", "langchain", "llamaindex"]
+
+
+def test_fallback_runs_the_next_backend(monkeypatch):
+    from rfc_rag import config
+
+    class Broken:
+        name = "broken"
+        def complete(self, prompt, **kw):
+            raise RuntimeError("outage")
+
+    class Works:
+        name = "works"
+        def complete(self, prompt, **kw):
+            return "fallback answer"
+
+    monkeypatch.setattr(config, "LLM_BACKEND", "a")
+    monkeypatch.setattr(config, "LLM_FALLBACKS", ["b"])
+    monkeypatch.setitem(llm.BACKENDS, "a", "x")
+    monkeypatch.setitem(llm.BACKENDS, "b", "y")
+    monkeypatch.setitem(llm._loaded, "a", Broken())
+    monkeypatch.setitem(llm._loaded, "b", Works())
+    assert llm.complete("q") == "fallback answer"
+    assert llm.last_used == "b"
+
+
+def test_all_backends_failing_raises_with_every_reason(monkeypatch):
+    from rfc_rag import config
+
+    class Broken:
+        def complete(self, prompt, **kw):
+            raise RuntimeError("outage")
+
+    monkeypatch.setattr(config, "LLM_BACKEND", "a")
+    monkeypatch.setattr(config, "LLM_FALLBACKS", [])
+    monkeypatch.setitem(llm.BACKENDS, "a", "x")
+    monkeypatch.setitem(llm._loaded, "a", Broken())
+    with pytest.raises(llm.LLMError, match="all backends failed"):
+        llm.complete("q")

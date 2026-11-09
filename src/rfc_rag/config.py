@@ -12,6 +12,9 @@ LLM_MODEL = os.getenv("LLM_MODEL", "gpt-oss-20b-MXFP4-Q8")
 EMBED_MODEL = os.getenv("EMBED_MODEL", "bge-small-en-v1.5-bf16")
 EMBED_DIM = int(os.getenv("EMBED_DIM", "384"))
 
+LLM_BACKEND = os.getenv("LLM_BACKEND", "direct")
+LLM_FALLBACKS = [b.strip() for b in os.getenv("LLM_FALLBACKS", "").split(",") if b.strip()]
+
 OMLX_SETTINGS = Path.home() / ".omlx" / "settings.json"
 
 

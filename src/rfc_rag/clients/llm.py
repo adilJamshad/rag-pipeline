@@ -18,6 +18,7 @@ BACKENDS = {"direct": "._direct", "langchain": "._langchain", "llamaindex": "._l
 
 _loaded: dict[str, object] = {}
 last_used: str | None = None
+last_usage: dict | None = None
 
 
 def load(name: str):
@@ -36,13 +37,14 @@ def chain() -> list[str]:
 
 
 def _call(method: str, *args, **kwargs):
-    global last_used
+    global last_used, last_usage
     errors = []
     for name in chain():
         try:
             backend = load(name)
             result = getattr(backend, method)(*args, **kwargs)
             last_used = name
+            globals()["last_usage"] = getattr(backend, "last_usage", None)
             return result
         except Exception as exc:
             errors.append(f"{name}: {type(exc).__name__}: {exc}")

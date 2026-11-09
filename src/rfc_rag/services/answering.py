@@ -3,6 +3,7 @@
 import math
 import time
 
+from .. import observability
 from ..clients import llm
 from ..db import connect
 from ..models import Analysis, Answer, Fact, Hit, Trace
@@ -67,6 +68,17 @@ def _facts_answer(number: int, trace: Trace) -> Answer:
 
 
 def ask(question: str) -> Answer:
+    """Answer a question and record it. Recording never affects the answer."""
+    try:
+        answer = _ask(question)
+    except Exception as exc:
+        observability.record(Answer("error", str(exc), Trace(question)), error=repr(exc))
+        raise
+    observability.record(answer)
+    return answer
+
+
+def _ask(question: str) -> Answer:
     trace = Trace(question)
 
     started = time.time()

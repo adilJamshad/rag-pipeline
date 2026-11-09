@@ -7,6 +7,8 @@ from .base import LLMError
 
 name = "direct"
 
+last_usage: dict | None = None
+
 
 def _headers() -> dict[str, str]:
     key = config.api_key()
@@ -53,6 +55,8 @@ def complete(prompt: str, *, max_tokens: int = 800, temperature: float = 0.0) ->
     data = r.json()
     if "error" in data:
         raise LLMError(str(data["error"]))
+    global last_usage
+    last_usage = data.get("usage")
     message = data["choices"][0]["message"]
     content = (message.get("content") or "").strip()
     if not content and message.get("reasoning_content"):
@@ -71,6 +75,8 @@ def embed(texts: list[str]) -> list[list[float]]:
     data = r.json()
     if "error" in data:
         raise LLMError(str(data["error"]))
+    global last_usage
+    last_usage = data.get("usage")
     vectors = [d["embedding"] for d in data["data"]]
     bad = {len(v) for v in vectors} - {config.EMBED_DIM}
     if bad:

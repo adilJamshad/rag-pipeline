@@ -3,6 +3,7 @@ import dataclasses
 import json
 import sys
 
+from .. import observability
 from ..models import Answer, Fact
 from ..services.answering import ask
 
@@ -112,11 +113,42 @@ def render(answer: Answer) -> str:
     return "\n".join(lines) + "\n"
 
 
+def _stats(r: dict) -> str:
+    lines = ["", _c(BOLD, f"{r['total']} questions in the last 30 days"), ""]
+    if not r["total"]:
+        return "\n".join(lines) + "  nothing recorded yet\n"
+    pct = lambda n: f"{n / r['total'] * 100:.0f}%"
+    lines += [
+        f"  answered        {r['answered']:>5}  ({pct(r['answered'])})",
+        f"  refused         {r['refused']:>5}  ({pct(r['refused'])})",
+        f"  ungrounded      {r['ungrounded']:>5}",
+        f"  model calls     {r['llm_calls']:>5}  ({pct(r['llm_calls'])} of questions)",
+        f"  tokens in/out   {r['prompt_tokens']:>5} / {r['completion_tokens']}",
+        "",
+        _c(DIM, "  route         n     p50      p95   model calls"),
+    ]
+    for row in r["routes"]:
+        lines.append(f"  {row['route'] or '?':<12} {row['n']:>3}  {row['p50_ms'] or 0:>6}ms "
+                     f"{row['p95_ms'] or 0:>7}ms   {row['llm_calls']}")
+    if r["attention"]:
+        lines += ["", _c(YELLOW, "Needs attention:")]
+        for a in r["attention"]:
+            why = "ungrounded" if a["grounded"] is False else a["route"]
+            lines.append(f"  {why:<12} {a['question'][:54]}")
+    return "\n".join(lines) + "\n"
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(prog="rfc", description="Ask about DNS RFCs.")
-    parser.add_argument("question", nargs="+")
+    parser.add_argument("question", nargs="*")
     parser.add_argument("--json", action="store_true", help="machine-readable output")
+    parser.add_argument("--stats", action="store_true", help="show usage over the last 30 days")
     args = parser.parse_args()
+    observability.setup_logging()
+
+    if args.stats:
+        print(_stats(observability.report()), end="")
+        return 0
 
     answer = ask(" ".join(args.question))
 

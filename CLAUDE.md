@@ -53,6 +53,12 @@ Route by rule, not by model. Log which path each question took.
 - `LLM_FALLBACKS` only protects against client-library failures, not server outages: every backend hits the same endpoint. Real redundancy is a second `LLM_BASE_URL`.
 - `clients/` wraps anything outside the process, `ingest/` builds the corpus, `services/` answers questions, `interfaces/` exposes it, `evaluation/` measures it.
 
+## Observability
+
+Every question is recorded to `query_log` from inside `ask()`. Recording is wrapped so it can never break answering — failures are logged, never raised. `QUERY_LOG=0` disables it; `rfc --stats` reports.
+
+Real token counts come from `llm.last_usage`, which only the `direct` backend populates — the framework backends do not surface usage, so those rows have null token columns.
+
 ## Commands
 
     uv sync                                      install
@@ -61,6 +67,7 @@ Route by rule, not by model. Log which path each question took.
     uv run python -m rfc_rag.ingest.embeddings   fill vectors
     uv run python -m rfc_rag.evaluation.run      score it
     uv run rfc "<question>"                      ask
+    uv run rfc --stats                           usage, latency, failures
     uv run pytest                                tests
 
 ## Conventions

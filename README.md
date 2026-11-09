@@ -107,6 +107,37 @@ Every row here was a belief I held before building, overturned by a measurement.
 | 12 | A similarity threshold separates answerable from unanswerable questions | Distributions overlap: worst answerable **0.687**, best unanswerable **0.688** | Cosine similarity measures topical closeness, not whether a passage answers a question. "Write me a Python script to query DNS" is about DNS and retrieves DNS text; the specs simply do not answer it |
 | 13 | Demoting obsolete RFCs would improve the scores | MRR moved 0.483 → 0.488, but the top-5 for "SOA record fields" lost both dead 1983 documents | The eval set measures whether gold was found, not whether junk was avoided. A metric can miss a real user-facing improvement |
 
+## Observability
+
+Every question writes one row to `query_log`: route, per-stage timings, retrieved section anchors, context size, real prompt/completion tokens, which client backend answered, whether the quote verified, the cited RFCs, and the error if it failed.
+
+Recording happens inside `ask()`, so the CLI, the evaluation harness and any future HTTP interface are all covered, and it is wrapped so that a logging failure can never affect an answer.
+
+    uv run rfc --stats
+
+    4 questions in the last 30 days
+
+      answered            1  (25%)
+      refused             0  (0%)
+      ungrounded          0
+      model calls         0  (0% of questions)
+
+      route         n     p50      p95   model calls
+      error          3       0ms       0ms   0
+      facts          1       0ms       0ms   0
+
+    Needs attention:
+      error        what is the current DNS specification
+
+That output is real, from a run where the model server was down. The facts
+route still answered with zero model calls, and the three failures were
+recorded with the exact cause — `all backends failed for embed() ->
+direct: ConnectError: [Errno 61] Connection refused`.
+
+Deliberately not used: Prometheus, OpenTelemetry, LangSmith. A table in a
+database that already exists answers every question this project has, and a
+metrics stack for a single-user CLI would be more infrastructure than system.
+
 ## Project layout
 
 ```
@@ -135,8 +166,10 @@ src/rfc_rag/
     stages.py          PURE stages: analyse, plan, compose, verify
     answering.py       orchestration: runs the stages, hits db and model
 
+  observability.py     one row per question, and the report over them
+
   interfaces/          how a human or machine calls it
-    cli.py             `rfc "<question>"`
+    cli.py             `rfc "<question>"`, `rfc --stats`
 
   evaluation/
     build.py           job: generate the question sets

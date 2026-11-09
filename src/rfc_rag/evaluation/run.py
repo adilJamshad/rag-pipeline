@@ -1,11 +1,11 @@
 import json
 import time
-from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable
 
-from .answer import ask
-from .search import Hit, hybrid, keyword, semantic
+from ..models import Hit, RetrievalScore
+from ..services.answering import ask
+from ..services.search import hybrid, keyword, semantic
 
 EVAL = Path("eval")
 
@@ -14,21 +14,7 @@ def load(name: str) -> list[dict]:
     return [json.loads(line) for line in (EVAL / f"{name}.jsonl").open()]
 
 
-@dataclass
-class Retrieval:
-    name: str
-    n: int
-    doc1: float
-    doc5: float
-    doc10: float
-    mrr: float
-
-    def __str__(self) -> str:
-        return (f"{self.name:<22} n={self.n:<4} doc@1 {self.doc1:.2f}  doc@5 {self.doc5:.2f}  "
-                f"doc@10 {self.doc10:.2f}  MRR {self.mrr:.3f}")
-
-
-def retrieval(name: str, retrieve: Callable[[str, int], list[Hit]], k: int = 10) -> Retrieval:
+def retrieval(name: str, retrieve: Callable[[str, int], list[Hit]], k: int = 10) -> RetrievalScore:
     questions = load("answerable")
     ranks = []
     for q in questions:
@@ -40,7 +26,7 @@ def retrieval(name: str, retrieve: Callable[[str, int], list[Hit]], k: int = 10)
         ranks.append(rank)
     n = len(ranks)
     at = lambda cut: sum(1 for r in ranks if r and r <= cut) / n
-    return Retrieval(name, n, at(1), at(5), at(10), sum(1 / r for r in ranks if r) / n)
+    return RetrievalScore(name, n, at(1), at(5), at(10), sum(1 / r for r in ranks if r) / n)
 
 
 def answers() -> dict:

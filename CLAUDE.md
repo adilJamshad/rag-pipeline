@@ -44,12 +44,21 @@ Route by rule, not by model. Log which path each question took.
 - Supersession fans out and chains: RFC 2616 is obsoleted by six RFCs at once; some chains run 33 deep. The deepest ones are the old periodically-republished "Internet Official Protocol Standards" meta-RFCs — exclude them from graph statistics deliberately.
 - 9,854 RFCs total; 1,384 obsoleted, 1,242 updated, 2,483 carry errata.
 
+## Layout
+
+- `models.py` holds **every** dataclass. Do not define a dataclass anywhere else.
+- `services/stages.py` is **pure** — no db, no network, no model. `services/answering.py` holds everything with side effects. Keep that line; it is why the suite runs without a model server.
+- `clients/` wraps anything outside the process, `ingest/` builds the corpus, `services/` answers questions, `interfaces/` exposes it, `evaluation/` measures it.
+
 ## Commands
 
-    uv sync                       install
-    docker compose up -d          start postgres
-    uv run pytest                 tests
-    psql $DATABASE_URL            open the db
+    uv sync                                      install
+    docker compose up -d                         start postgres
+    uv run python -m rfc_rag.ingest.run          build the corpus
+    uv run python -m rfc_rag.ingest.embeddings   fill vectors
+    uv run python -m rfc_rag.evaluation.run      score it
+    uv run rfc "<question>"                      ask
+    uv run pytest                                tests
 
 ## Conventions
 

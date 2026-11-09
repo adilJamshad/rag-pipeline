@@ -1,8 +1,9 @@
 import html
 import re
-from dataclasses import dataclass
 
 from selectolax.lexbor import LexborHTMLParser as HTMLParser
+
+from ..models import Section
 
 LEGACY_HEADING = re.compile(
     r'<span class="h\d+"><a class="selflink" id="(section-[\d.]+)"[^>]*>([\d.]+)</a>\.?\s*(.*?)</span>',
@@ -17,19 +18,6 @@ SKIP_TITLES = re.compile(
     re.I,
 )
 SKIP_ANCHORS = ("section-boilerplate", "section-toc")
-
-
-@dataclass
-class Section:
-    anchor: str
-    number: str | None
-    title: str
-    body: str
-    has_pre: bool
-
-    @property
-    def tokens(self) -> int:
-        return max(1, len(self.body) // 4)
 
 
 def _clean(raw: str) -> str:

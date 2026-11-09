@@ -2,7 +2,7 @@ import json
 
 import httpx
 
-from . import config
+from .. import config
 
 
 class LLMError(RuntimeError):

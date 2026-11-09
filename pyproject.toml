@@ -10,7 +10,7 @@ dependencies = [
 ]
 
 [project.scripts]
-rfc = "rfc_rag.cli:main"
+rfc = "rfc_rag.interfaces.cli:main"
 
 [dependency-groups]
 dev = ["pytest>=8.0"]

@@ -2,8 +2,8 @@ import json
 import sys
 from pathlib import Path
 
-from . import llm
-from .db import connect
+from ..clients import llm
+from ..db import connect
 
 OUT = Path("eval")
 sys.path.insert(0, str(OUT))

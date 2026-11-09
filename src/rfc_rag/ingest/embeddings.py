@@ -1,7 +1,7 @@
 import time
 
-from . import llm
-from .db import connect
+from ..clients import llm
+from ..db import connect
 
 BATCH = 32
 

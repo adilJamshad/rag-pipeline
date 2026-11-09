@@ -1,6 +1,6 @@
 import pytest
 
-from rfc_rag import llm
+from rfc_rag.clients import llm
 from rfc_rag.config import EMBED_DIM
 
 

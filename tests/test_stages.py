@@ -1,8 +1,8 @@
 import pytest
 
-from rfc_rag import facts, pipeline
-from rfc_rag.pipeline import Trace, analyse, compose, normalise, plan, verify
-from rfc_rag.search import Hit
+from rfc_rag.models import Fact, Hit, Trace
+from rfc_rag.services import answering, stages, supersession
+from rfc_rag.services.stages import analyse, compose, normalise, plan, verify
 
 
 def hit(body: str = "labels 63 octets or less", sid: int = 1, rfc: int = 1035) -> Hit:
@@ -58,9 +58,9 @@ def test_normalise_keeps_internal_punctuation():
 
 
 def test_parse_extracts_json_from_noise():
-    assert pipeline._parse('x {"answer": "y"} z')["answer"] == "y"
-    assert pipeline._parse("no json") is None
-    assert pipeline._parse("{broken") is None
+    assert stages.parse_response('x {"answer": "y"} z')["answer"] == "y"
+    assert stages.parse_response("no json") is None
+    assert stages.parse_response("{broken") is None
 
 
 def test_trace_totals_its_steps():
@@ -70,8 +70,8 @@ def test_trace_totals_its_steps():
 
 
 def test_statuses_only_reports_documents_worth_warning_about(monkeypatch):
-    clean = facts.Fact(9999, "T", 2024, "PROPOSED STANDARD", False, [], [], [(9999, "T")])
-    dirty = facts.Fact(1035, "T", 1987, "INTERNET STANDARD", False, [], [2181], [(1035, "T")])
-    monkeypatch.setattr(facts, "lookup", lambda n: dirty if n == 1035 else clean)
-    out = pipeline.statuses([hit(rfc=1035), hit(rfc=9999)])
+    clean = Fact(9999, "T", 2024, "PROPOSED STANDARD", False, [], [], [(9999, "T")])
+    dirty = Fact(1035, "T", 1987, "INTERNET STANDARD", False, [], [2181], [(1035, "T")])
+    monkeypatch.setattr(supersession, "lookup", lambda n: dirty if n == 1035 else clean)
+    out = answering.statuses([hit(rfc=1035), hit(rfc=9999)])
     assert [f.rfc for f in out] == [1035]

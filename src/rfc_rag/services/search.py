@@ -1,31 +1,10 @@
 import re
-from dataclasses import dataclass
 
-from . import llm
-from .db import connect
+from ..clients import llm
+from ..db import connect
+from ..models import Hit
 
 WORD = re.compile(r"[A-Za-z0-9][A-Za-z0-9.\-]*")
-
-
-@dataclass
-class Hit:
-    section_id: int
-    rfc: int
-    anchor: str
-    number: str | None
-    title: str
-    body: str
-    score: float
-    obsolete: bool = False
-
-    @property
-    def cite(self) -> str:
-        where = f"§{self.number}" if self.number else ""
-        return f"RFC {self.rfc} {where} {self.title}".strip()
-
-    @property
-    def url(self) -> str:
-        return f"https://www.rfc-editor.org/rfc/rfc{self.rfc}#{self.anchor.split('.p')[0]}"
 
 
 def _tsquery(text: str, mode: str) -> str:

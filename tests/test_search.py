@@ -1,4 +1,5 @@
-from rfc_rag.search import Hit, _tsquery, fuse
+from rfc_rag.models import Hit
+from rfc_rag.services.search import _tsquery, fuse
 
 
 def hit(sid: int, rfc: int = 1035, number: str = "1") -> Hit:

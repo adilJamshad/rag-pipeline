@@ -3,9 +3,8 @@ import dataclasses
 import json
 import sys
 
-from .answer import ask
-from .facts import Fact
-from .pipeline import Answer
+from ..models import Answer, Fact
+from ..services.answering import ask
 
 DIM, BOLD, RED, YELLOW, GREEN, OFF = "\033[2m", "\033[1m", "\033[31m", "\033[33m", "\033[32m", "\033[0m"
 

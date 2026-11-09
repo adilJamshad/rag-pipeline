@@ -1,7 +1,7 @@
 from pathlib import Path
 
-from . import fetch, index
-from .db import connect
+from ..db import connect
+from . import fetch, rfc_index as index
 from .parse import sections
 
 DATA = Path("data")

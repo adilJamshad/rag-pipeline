@@ -1,9 +1,10 @@
 import re
 import xml.etree.ElementTree as ET
-from dataclasses import dataclass, field
 from pathlib import Path
 
 import httpx
+
+from ..models import Rfc
 
 INDEX_URL = "https://www.rfc-editor.org/rfc-index.xml"
 NS = "{https://www.rfc-editor.org/rfc-index}"
@@ -11,22 +12,6 @@ NS = "{https://www.rfc-editor.org/rfc-index}"
 MONTHS = {m: i for i, m in enumerate(
     ["January", "February", "March", "April", "May", "June", "July",
      "August", "September", "October", "November", "December"], 1)}
-
-
-@dataclass
-class Rfc:
-    number: int
-    title: str
-    year: int | None
-    status: str | None
-    stream: str | None
-    pages: int | None
-    errata_url: str | None
-    keywords: list[str] = field(default_factory=list)
-    abstract: str = ""
-    wg: str | None = None
-    obsoletes: list[int] = field(default_factory=list)
-    updates: list[int] = field(default_factory=list)
 
 
 def download(path: Path) -> Path:

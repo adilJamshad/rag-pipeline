@@ -1,5 +1,6 @@
-from rfc_rag import parse
-from rfc_rag.parse import Section, sections
+from rfc_rag.ingest import parse
+from rfc_rag.ingest.parse import sections
+from rfc_rag.models import Section
 
 LEGACY = """<pre>
 <span class="h2"><a class="selflink" id="section-1" href="#section-1">1</a>. Introduction</span>

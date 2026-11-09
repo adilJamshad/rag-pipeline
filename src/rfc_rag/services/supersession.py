@@ -1,7 +1,7 @@
 import re
-from dataclasses import dataclass
 
-from .db import connect
+from ..db import connect
+from ..models import Fact
 
 RFC_REF = re.compile(r"\brfc[\s-]*(\d{1,5})\b", re.I)
 
@@ -10,28 +10,6 @@ INTENTS = [
     ("replaced", re.compile(r"\b(replac|supersed|obsolet|instead of|what should i read)\w*\b", re.I)),
     ("updated", re.compile(r"\b(update|updated by|amend|chang|modif)\w*\b", re.I)),
 ]
-
-
-@dataclass
-class Fact:
-    rfc: int
-    title: str
-    year: int | None
-    status: str
-    obsolete: bool
-    obsoleted_by: list[int]
-    updated_by: list[int]
-    current: list[tuple[int, str]]
-
-    @property
-    def headline(self) -> str:
-        if not self.obsolete and not self.updated_by:
-            return f"RFC {self.rfc} is current and has never been updated."
-        if not self.obsolete:
-            n = len(self.updated_by)
-            return f"RFC {self.rfc} is current, but {n} later RFC{'s' if n != 1 else ''} updated it."
-        live = ", ".join(f"RFC {n}" for n, _ in self.current)
-        return f"RFC {self.rfc} is obsolete. Read {live} instead."
 
 
 def referenced(question: str) -> int | None:

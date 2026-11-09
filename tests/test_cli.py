@@ -1,7 +1,5 @@
-from rfc_rag.pipeline import Answer
-from rfc_rag.cli import render
-from rfc_rag.facts import Fact
-from rfc_rag.search import Hit
+from rfc_rag.interfaces.cli import render
+from rfc_rag.models import Answer, Fact, Hit
 
 
 def hit(obsolete: bool = False) -> Hit:

@@ -2,14 +2,16 @@ from pathlib import Path
 
 import pytest
 
-from rfc_rag import index
+from rfc_rag.models import Rfc
+
+from rfc_rag.ingest import rfc_index as index
 
 INDEX = Path("data/rfc-index.xml")
 needs_index = pytest.mark.skipif(not INDEX.exists(), reason="run `uv run python -m rfc_rag.ingest` first")
 
 
 def rfc(n, title="Something", obsoletes=(), updates=(), keywords=(), wg=None):
-    return index.Rfc(n, title, 2000, "PROPOSED STANDARD", "IETF", 10, None,
+    return Rfc(n, title, 2000, "PROPOSED STANDARD", "IETF", 10, None,
                      keywords=list(keywords), abstract="", wg=wg,
                      obsoletes=list(obsoletes), updates=list(updates))
 

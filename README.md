@@ -107,8 +107,64 @@ Every row here was a belief I held before building, overturned by a measurement.
 | 12 | A similarity threshold separates answerable from unanswerable questions | Distributions overlap: worst answerable **0.687**, best unanswerable **0.688** | Cosine similarity measures topical closeness, not whether a passage answers a question. "Write me a Python script to query DNS" is about DNS and retrieves DNS text; the specs simply do not answer it |
 | 13 | Demoting obsolete RFCs would improve the scores | MRR moved 0.483 → 0.488, but the top-5 for "SOA record fields" lost both dead 1983 documents | The eval set measures whether gold was found, not whether junk was avoided. A metric can miss a real user-facing improvement |
 
+## Project layout
+
+```
+src/rfc_rag/
+  config.py            settings, read from .env
+  models.py            every data shape in the system, and nothing else
+  db.py                the Postgres connection
+
+  clients/             things outside this process
+    llm.py             OpenAI-compatible chat + embeddings
+
+  ingest/              the build pipeline, run as jobs
+    rfc_index.py       parse rfc-index.xml, choose the corpus
+    fetch.py           download RFC HTML, cached on disk
+    parse.py           HTML -> sections, three document shapes
+    run.py             job: load documents, graph and sections
+    embeddings.py      job: fill section and document vectors
+
+  services/            the query pipeline
+    search.py          keyword, semantic, hybrid retrieval
+    supersession.py    what the obsoletes/updates graph knows
+    stages.py          PURE stages: analyse, plan, compose, verify
+    answering.py       orchestration: runs the stages, hits db and model
+
+  interfaces/          how a human or machine calls it
+    cli.py             `rfc "<question>"`
+
+  evaluation/
+    build.py           job: generate the question sets
+    run.py             job: score retrieval and answers
+
+sql/                   schema and the recursive supersession function
+eval/questions.py      the hand-written questions, the real eval source
+tests/
+```
+
+Two rules keep it navigable:
+
+- **`models.py` holds every dataclass.** If you want to know what a `Hit` or a `Fact` is, there is one place to look. Nothing else defines a shape.
+- **`services/stages.py` is pure and `services/answering.py` is not.** Every function that touches the database, the network or the model lives in `answering.py`. That is why most of the suite runs in two seconds with nothing else running.
+
+Entry points:
+
+```
+uv run rfc "<question>"                      ask a question
+uv run python -m rfc_rag.ingest.run          download and parse the corpus
+uv run python -m rfc_rag.ingest.embeddings   fill in the vectors
+uv run python -m rfc_rag.evaluation.build    regenerate the question sets
+uv run python -m rfc_rag.evaluation.run      score everything
+```
+
 ## Running it
 
     uv sync
     docker compose up -d
+    uv run python -m rfc_rag.ingest.run
+    uv run python -m rfc_rag.ingest.embeddings
     uv run pytest
+
+The corpus is not committed. Ingestion downloads 417 documents from
+rfc-editor.org and takes about six minutes.

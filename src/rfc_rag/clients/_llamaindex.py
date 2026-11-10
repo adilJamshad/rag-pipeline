@@ -24,9 +24,13 @@ def _models():
     return _llm, _embeddings
 
 
-def complete(prompt: str, *, max_tokens: int = 800, temperature: float = 0.0) -> str:
+def complete(prompt: str, *, max_tokens: int = 800, temperature: float = 0.0,
+             model: str | None = None) -> str:
     llm, _ = _models()
-    text = str(llm.complete(prompt, max_tokens=max_tokens)).strip()
+    kwargs = {"max_tokens": max_tokens}
+    if model:
+        kwargs["model"] = model
+    text = str(llm.complete(prompt, **kwargs)).strip()
     if not text:
         raise LLMError("empty content: reasoning consumed the max_tokens budget")
     return text

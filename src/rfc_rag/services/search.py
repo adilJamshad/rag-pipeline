@@ -1,5 +1,6 @@
 import re
 
+from .. import corpus
 from ..clients import llm
 from ..db import connect
 from ..models import Hit
@@ -58,6 +59,7 @@ OBSOLETE = """exists (select 1 from rfc_relation x
 
 def semantic(query: str, k: int = 5, current_only: bool = False,
              demote: float = 0.0, only_rfc: int | None = None) -> list[Hit]:
+    corpus.check()
     vector = llm.embed([query])[0]
 
     sql = f"""

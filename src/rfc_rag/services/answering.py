@@ -3,7 +3,7 @@
 import math
 import time
 
-from .. import observability
+from .. import config, observability
 from ..clients import llm
 from ..db import connect
 from ..models import Analysis, Answer, Fact, Hit, Trace
@@ -60,6 +60,18 @@ def statuses(hits: list[Hit]) -> list[Fact]:
     return out
 
 
+def _generate(prompt: str, kept: list[Hit], trace: Trace, model: str):
+    raw = llm.complete(prompt, max_tokens=900, model=model)
+    trace.llm_calls += 1
+    trace.models.append(model)
+    parsed = stages.parse_response(raw)
+    if not parsed:
+        return raw, None, False, kept[:1], ""
+    used = [kept[i - 1] for i in parsed.get("used", []) if 1 <= i <= len(kept)] or kept[:1]
+    quote = (parsed.get("quote") or "").strip()
+    return raw, parsed, stages.verify(quote, used or kept), used, quote
+
+
 def _facts_answer(number: int, trace: Trace) -> Answer:
     fact = supersession.lookup(number)
     if not fact:
@@ -113,14 +125,21 @@ def _ask(question: str) -> Answer:
                       quote=top.body, grounded=True, status=statuses([top]))
 
     sections, kept = stages.compose(hits, trace)
+    prompt = stages.PROMPT.format(question=question, sections=sections)
 
     started = time.time()
-    raw = llm.complete(stages.PROMPT.format(question=question, sections=sections),
-                       max_tokens=900)
-    trace.llm_calls += 1
+    raw, parsed, grounded, used, quote = _generate(prompt, kept, trace, config.LLM_MODEL)
+
+    # The cheap model is the default. Escalate only on a measured failure:
+    # unparseable output, or a quote that is not in the text it cited.
+    if config.LLM_MODEL_HEAVY and "NOT_FOUND" not in raw and (not parsed or not grounded):
+        trace.escalated = True
+        raw2, parsed2, grounded2, used2, quote2 = _generate(
+            prompt, kept, trace, config.LLM_MODEL_HEAVY)
+        if parsed2 and (grounded2 or not parsed):
+            raw, parsed, grounded, used, quote = raw2, parsed2, grounded2, used2, quote2
     trace.step("generate", started)
 
-    parsed = stages.parse_response(raw)
     if "NOT_FOUND" in raw and not parsed:
         trace.route = "refusal"
         return Answer("refusal",
@@ -130,11 +149,7 @@ def _ask(question: str) -> Answer:
         trace.route = "refusal"
         return Answer("refusal", "Could not produce a grounded answer.", trace, hits=kept)
 
-    used = [kept[i - 1] for i in parsed.get("used", []) if 1 <= i <= len(kept)] or kept[:1]
-    quote = (parsed.get("quote") or "").strip()
-
     started = time.time()
-    grounded = stages.verify(quote, used or kept)
     status = statuses(used)
     trace.step("verify", started)
 

@@ -23,10 +23,12 @@ def _models():
     return _chat, _embeddings
 
 
-def complete(prompt: str, *, max_tokens: int = 800, temperature: float = 0.0) -> str:
+def complete(prompt: str, *, max_tokens: int = 800, temperature: float = 0.0,
+             model: str | None = None) -> str:
     chat, _ = _models()
     message = chat.invoke(
         prompt,
+        model=model or config.LLM_MODEL,
         max_tokens=max_tokens,
         temperature=temperature,
         extra_body={"reasoning_effort": "low"},

@@ -52,9 +52,22 @@ def _call(method: str, *args, **kwargs):
     raise LLMError(f"all backends failed for {method}() -> " + " | ".join(errors))
 
 
-def complete(prompt: str, *, max_tokens: int = 800, temperature: float = 0.0) -> str:
-    return _call("complete", prompt, max_tokens=max_tokens, temperature=temperature)
+def complete(prompt: str, *, max_tokens: int = 800, temperature: float = 0.0,
+             model: str | None = None) -> str:
+    """Chat is stateless, so it may fall back across backends and models."""
+    return _call("complete", prompt, max_tokens=max_tokens,
+                 temperature=temperature, model=model)
 
 
 def embed(texts: list[str]) -> list[list[float]]:
-    return _call("embed", texts)
+    """Embeddings never fall back.
+
+    Vectors from a different model occupy a different space. Comparing them
+    returns plausible numbers and meaningless rankings, so a second backend
+    would corrupt retrieval silently. One backend, or an error.
+    """
+    global last_used
+    backend = load(config.LLM_BACKEND)
+    vectors = backend.embed(texts)
+    last_used = config.LLM_BACKEND
+    return vectors

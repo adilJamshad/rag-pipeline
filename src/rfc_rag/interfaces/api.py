@@ -1,0 +1,217 @@
+"""HTTP interface.
+
+Every answer names the RFCs it researched, with their supersession status, so
+a caller can tell a current specification from a replaced one without a second
+request.
+"""
+
+import logging
+import os
+import time
+
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel, Field
+
+from .. import corpus, observability
+from ..clients.base import LLMError
+from ..db import connect
+from ..models import Answer
+from ..services import supersession
+from ..services.answering import ask
+from . import guards
+
+app = FastAPI(
+    title="rfc-rag",
+    description="Answers about DNS RFCs, with verified quotes and supersession status.",
+    version="0.1.0",
+)
+log = logging.getLogger(__name__)
+STARTED = time.time()
+METRICS_TOKEN = os.getenv("METRICS_TOKEN", "")
+
+
+class Question(BaseModel):
+    question: str = Field(..., examples=["What is the maximum length of a DNS label?"])
+
+
+def _client(request: Request) -> str:
+    forwarded = request.headers.get("x-forwarded-for", "")
+    return (forwarded.split(",")[0].strip() if forwarded
+            else (request.client.host if request.client else "unknown"))
+
+
+def _sources(answer: Answer) -> list[dict]:
+    """The RFCs researched, in the order retrieval ranked them."""
+    by_rfc: dict[int, dict] = {}
+    for hit in answer.hits:
+        entry = by_rfc.setdefault(hit.rfc, {
+            "rfc": hit.rfc, "url": f"https://www.rfc-editor.org/rfc/rfc{hit.rfc}",
+            "sections": [], "used_in_answer": False, "obsolete": hit.obsolete,
+        })
+        entry["sections"].append({
+            "section": hit.number, "title": hit.title, "anchor": hit.anchor,
+            "score": round(hit.score, 4), "url": hit.url,
+            "quoted": any(u.section_id == hit.section_id for u in answer.used),
+        })
+        if any(u.rfc == hit.rfc for u in answer.used):
+            entry["used_in_answer"] = True
+
+    for fact in answer.status:
+        if fact.rfc in by_rfc:
+            by_rfc[fact.rfc]["status"] = {
+                "obsolete": fact.obsolete,
+                "replaced_by": fact.obsoleted_by or None,
+                "read_instead": [n for n, _ in fact.current] if fact.obsolete else None,
+                "updated_by_count": len(fact.updated_by),
+                "updated_by": fact.updated_by or None,
+                "warning": fact.headline,
+            }
+    return list(by_rfc.values())
+
+
+def _payload(answer: Answer) -> dict:
+    return {
+        "route": answer.route,
+        "answer": answer.text,
+        "quote": answer.quote,
+        "verified": answer.grounded,
+        "sources": _sources(answer),
+        "fact": ({"rfc": answer.fact.rfc, "status": answer.fact.status,
+                  "obsolete": answer.fact.obsolete,
+                  "replaced_by": answer.fact.obsoleted_by or None,
+                  "read_instead": [n for n, _ in answer.fact.current],
+                  "updated_by": answer.fact.updated_by or None}
+                 if answer.fact else None),
+        "meta": {
+            "models": answer.trace.models,
+            "escalated": answer.trace.escalated,
+            "llm_calls": answer.trace.llm_calls,
+            "took_ms": int(answer.trace.total * 1000),
+            "cached": False,
+        },
+    }
+
+
+@app.exception_handler(LLMError)
+async def _upstream(request: Request, exc: LLMError):
+    """Never leak the provider URL, key or stack trace to a caller."""
+    throttled = "429" in str(exc) or "RESOURCE_EXHAUSTED" in str(exc)
+    log.warning("upstream failure: %s", exc)
+    if throttled:
+        return JSONResponse(
+            {"error": "The model provider is rate limiting this demo. Try again shortly."},
+            status_code=503, headers={"Retry-After": "60"})
+    return JSONResponse({"error": "The model backend is unavailable."}, status_code=502)
+
+
+@app.exception_handler(Exception)
+async def _unhandled(request: Request, exc: Exception):
+    log.exception("unhandled error on %s", request.url.path)
+    return JSONResponse({"error": "Internal error."}, status_code=500)
+
+
+@app.exception_handler(corpus.EmbeddingMismatch)
+async def _mismatch(request: Request, exc: corpus.EmbeddingMismatch):
+    log.error("corpus mismatch: %s", exc)
+    return JSONResponse({"error": "Search index is being rebuilt."}, status_code=503,
+                        headers={"Retry-After": "300"})
+
+
+@app.exception_handler(guards.Rejected)
+async def _rejected(request: Request, exc: guards.Rejected):
+    headers = {"Retry-After": str(exc.retry_after)} if exc.retry_after else None
+    return JSONResponse({"error": exc.detail}, status_code=exc.status, headers=headers)
+
+
+@app.post("/ask")
+def ask_endpoint(body: Question, request: Request):
+    question = guards.clean_question(body.question)
+    client = _client(request)
+
+    hit = guards.cached(question)
+    if hit:
+        hit["meta"] = {**hit.get("meta", {}), "cached": True}
+        return hit
+
+    guards.check_rate(client)
+    answer = ask(question)
+    payload = _payload(answer)
+    if answer.route != "error":
+        guards.store(question, payload)
+    _tag(client, answer)
+    return payload
+
+
+@app.get("/rfc/{number}")
+def rfc_endpoint(number: int):
+    """Supersession facts only. SQL, no model, no rate limit."""
+    fact = supersession.lookup(number)
+    if not fact:
+        return JSONResponse({"error": f"RFC {number} is not in this corpus."}, 404)
+    return {
+        "rfc": fact.rfc, "title": fact.title, "year": fact.year, "status": fact.status,
+        "obsolete": fact.obsolete, "replaced_by": fact.obsoleted_by or None,
+        "read_instead": [{"rfc": n, "title": t} for n, t in fact.current],
+        "updated_by": fact.updated_by or None,
+        "summary": fact.headline,
+        "url": fact.url,
+    }
+
+
+@app.get("/healthz")
+def healthz():
+    checks = {}
+    try:
+        with connect() as conn, conn.cursor() as cur:
+            cur.execute("select count(*) from section where embedding is not null")
+            embedded = cur.fetchone()[0]
+            cur.execute("select count(*) from section")
+            total = cur.fetchone()[0]
+        checks["database"] = "ok"
+        checks["embedded"] = f"{embedded}/{total}"
+        checks["corpus_ready"] = embedded == total and total > 0
+    except Exception as exc:
+        checks["database"] = f"error: {type(exc).__name__}"
+        checks["corpus_ready"] = False
+    try:
+        corpus.check()
+        stamp = corpus.recorded()
+        checks["embedding_model"] = f"{stamp[0]} ({stamp[1]}d)" if stamp else "not stamped"
+        if not stamp:
+            checks["corpus_ready"] = False
+    except Exception as exc:
+        checks["embedding_model"] = str(exc)[:140]
+        checks["corpus_ready"] = False
+
+    ok = checks.get("corpus_ready", False)
+    return JSONResponse({"status": "ok" if ok else "degraded",
+                         "uptime_s": int(time.time() - STARTED), **checks},
+                        status_code=200 if ok else 503)
+
+
+@app.get("/metrics")
+def metrics(request: Request):
+    if METRICS_TOKEN and request.headers.get("authorization") != f"Bearer {METRICS_TOKEN}":
+        return JSONResponse({"error": "unauthorized"}, 401)
+    report = observability.report()
+    with connect() as conn, conn.cursor() as cur:
+        cur.execute("select count(*), coalesce(sum(hits), 0) from answer_cache")
+        entries, hits = cur.fetchone()
+        cur.execute("""select count(*) from query_log
+                        where at > now() - interval '1 day' and not cached""")
+        today = cur.fetchone()[0]
+    report["cache"] = {"entries": entries, "hits": hits}
+    report["quota"] = {"used_today": today, "global_daily_limit": guards.GLOBAL_PER_DAY}
+    return report
+
+
+def _tag(client: str, answer: Answer) -> None:
+    """Attach the caller to the row ask() just wrote."""
+    try:
+        with connect() as conn, conn.cursor() as cur:
+            cur.execute("""update query_log set client = %s
+                            where id = (select max(id) from query_log)""", (client,))
+            conn.commit()
+    except Exception:
+        pass

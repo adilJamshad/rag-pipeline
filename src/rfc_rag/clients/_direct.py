@@ -70,6 +70,24 @@ def _parse_sse(text: str) -> str:
     return "".join(out)
 
 
+def _raise_for_status(r: httpx.Response, path: str) -> None:
+    """Convert transport errors into LLMError, as the backend contract requires.
+
+    The provider URL and key stay out of the message; callers surface this to
+    users, and `429` is kept so throttling can be told apart from a real fault.
+    """
+    if r.is_success:
+        return
+    detail = ""
+    try:
+        body = r.json()
+        body = body[0] if isinstance(body, list) and body else body
+        detail = str(body.get("error", {}).get("message", ""))[:200]
+    except Exception:
+        detail = r.text[:200]
+    raise LLMError(f"{path} returned {r.status_code}: {detail}")
+
+
 def complete(prompt: str, *, max_tokens: int = 800, temperature: float = 0.0,
              model: str | None = None) -> str:
     body = {
@@ -83,7 +101,7 @@ def complete(prompt: str, *, max_tokens: int = 800, temperature: float = 0.0,
     if "text/event-stream" in r.headers.get("content-type", ""):
         return _parse_sse(r.text).strip()
 
-    r.raise_for_status()
+    _raise_for_status(r, "/chat/completions")
     data = r.json()
     if "error" in data:
         raise LLMError(str(data["error"]))
@@ -102,7 +120,7 @@ def embed(texts: list[str]) -> list[list[float]]:
         body["dimensions"] = config.EMBED_DIMENSIONS
     r = _post("/embeddings", body, timeout=300,
               base=config.EMBED_BASE_URL, key=config.embed_api_key())
-    r.raise_for_status()
+    _raise_for_status(r, "/embeddings")
     data = r.json()
     if "error" in data:
         raise LLMError(str(data["error"]))

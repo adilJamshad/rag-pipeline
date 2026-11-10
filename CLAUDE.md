@@ -53,6 +53,15 @@ Route by rule, not by model. Log which path each question took.
 - `LLM_FALLBACKS` only protects against client-library failures, not server outages: every backend hits the same endpoint. Real redundancy is a second `LLM_BASE_URL`.
 - `clients/` wraps anything outside the process, `ingest/` builds the corpus, `services/` answers questions, `interfaces/` exposes it, `evaluation/` measures it.
 
+## HTTP API
+
+`interfaces/api.py` plus `interfaces/guards.py`. Rules:
+
+- Never let an upstream exception reach a caller. Backends raise `LLMError`; the API turns a 429 into 503 + Retry-After and everything else into a generic 502/500. Tests assert no URL, key or connection string appears in an error body.
+- `check_burst` is in-process and must stay database-free; `check_quota` is database-backed and is the one that survives restarts and multiple instances. On serverless, only `check_quota` is meaningful.
+- `GLOBAL_PER_DAY` is the cap protecting the model quota. Do not raise it without a reason.
+- `/ask` responses must keep naming every RFC researched, with status — that is the product, not a debugging aid.
+
 ## Observability
 
 Every question is recorded to `query_log` from inside `ask()`. Recording is wrapped so it can never break answering — failures are logged, never raised. `QUERY_LOG=0` disables it; `rfc --stats` reports.

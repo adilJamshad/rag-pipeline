@@ -107,6 +107,56 @@ Every row here was a belief I held before building, overturned by a measurement.
 | 12 | A similarity threshold separates answerable from unanswerable questions | Distributions overlap: worst answerable **0.687**, best unanswerable **0.688** | Cosine similarity measures topical closeness, not whether a passage answers a question. "Write me a Python script to query DNS" is about DNS and retrieves DNS text; the specs simply do not answer it |
 | 13 | Demoting obsolete RFCs would improve the scores | MRR moved 0.483 → 0.488, but the top-5 for "SOA record fields" lost both dead 1983 documents | The eval set measures whether gold was found, not whether junk was avoided. A metric can miss a real user-facing improvement |
 
+## HTTP API
+
+    uv run uvicorn rfc_rag.interfaces.api:app --port 8000
+
+| Endpoint | Model calls | Notes |
+|---|---|---|
+| `POST /ask` | 0 or 1 | rate limited, cached, returns every RFC researched |
+| `GET /rfc/{n}` | **0** | supersession facts, SQL only, unlimited |
+| `GET /healthz` | 0 | 503 until every section is embedded |
+| `GET /metrics` | 0 | counts, route mix, p50/p95, cache and quota use |
+
+Every answer names the documents it researched, which section was quoted, and
+whether each is still current:
+
+```json
+{
+  "answer": "The maximum length of a DNS label is 63 octets.",
+  "quote": "labels          63 octets or less",
+  "verified": true,
+  "sources": [{
+    "rfc": 1035,
+    "used_in_answer": true,
+    "sections": [{"section": "2.3.4", "title": "Size limits",
+                  "score": 0.8131, "quoted": true,
+                  "url": "https://www.rfc-editor.org/rfc/rfc1035#section-2.3.4"}],
+    "status": {"obsolete": false, "updated_by_count": 29,
+               "warning": "RFC 1035 is current, but 29 later RFCs updated it."}
+  }]
+}
+```
+
+### Limits and abuse handling
+
+The scarce resource is the model provider's free quota, so limits are layered:
+
+- **Input**: 500 characters, control characters stripped, non-text rejected.
+- **Burst**: 6/minute per caller, in-process, never touches the database.
+- **Quota**: 60/day per caller and **800/day globally**, database-backed so it
+  survives restarts. The global cap is the one that protects the quota.
+- **Cache**: identical questions are served from `answer_cache` and never reach
+  the model.
+
+Upstream failures never reach a caller as a stack trace. A provider 429 becomes
+`503` with `Retry-After`, anything else becomes a generic `502`, and the
+provider URL, key and traceback stay in the logs. There is a test asserting a
+connection string does not appear in a 500 response body.
+
+Deployment, including a genuinely free hosting combination, is in
+**[docs/DEPLOY.md](docs/DEPLOY.md)**.
+
 ## Observability
 
 Every question writes one row to `query_log`: route, per-stage timings, retrieved section anchors, context size, real prompt/completion tokens, which client backend answered, whether the quote verified, the cited RFCs, and the error if it failed.
@@ -170,6 +220,8 @@ src/rfc_rag/
 
   interfaces/          how a human or machine calls it
     cli.py             `rfc "<question>"`, `rfc --stats`
+    api.py             HTTP: /ask, /rfc/{n}, /healthz, /metrics
+    guards.py          input limits, rate limits, answer cache
 
   evaluation/
     build.py           job: generate the question sets

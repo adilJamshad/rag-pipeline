@@ -177,3 +177,27 @@ def test_embed_never_falls_back(monkeypatch):
     monkeypatch.setitem(llm._loaded, "b", Works())
     with pytest.raises(RuntimeError, match="outage"):
         llm.embed(["anything"])
+
+
+def test_http_errors_become_llm_errors_without_leaking_the_url():
+    from rfc_rag.clients import _direct
+
+    class Resp:
+        is_success, status_code = False, 429
+        text = "nope"
+        def json(self):
+            return [{"error": {"message": "Quota exceeded for generativelanguage.googleapis.com"}}]
+
+    with pytest.raises(llm.LLMError) as exc:
+        _direct._raise_for_status(Resp(), "/embeddings")
+    assert "429" in str(exc.value)
+    assert "Quota exceeded" in str(exc.value)
+
+
+def test_successful_responses_pass_through():
+    from rfc_rag.clients import _direct
+
+    class Resp:
+        is_success = True
+
+    _direct._raise_for_status(Resp(), "/embeddings")

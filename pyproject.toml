@@ -7,6 +7,8 @@ dependencies = [
     "psycopg[binary]>=3.2",
     "selectolax>=0.3.21",
     "python-dotenv>=1.0",
+    "fastapi>=0.162.4",
+    "uvicorn[standard]>=0.54.0",
 ]
 
 [project.scripts]

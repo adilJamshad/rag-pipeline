@@ -159,6 +159,46 @@ Deployment, including a genuinely free hosting combination, is in
 
 ## Observability
 
+Two layers, because they answer different questions.
+
+**Service level — structured JSON to stdout, one line per request.** Successes
+and failures take the same path and have the same shape, so a 500 is a line
+with `status: 500` and an error type, not a stack trace in a different format:
+
+```json
+{"ts":"2026-11-11T09:14:02Z","request_id":"a3f1c2d40b91","method":"POST",
+ "path":"/ask","status":503,"ms":4210,"client":"1.2.3.4","error":"LLMError","level":"warn"}
+```
+
+Every response carries `x-request-id` matching the log line. Nothing is written
+to a database, so the host collects it for free.
+
+This caught a real bug within a minute of being switched on: `/chats/not-a-uuid`
+was returning **500** because Postgres rejected the malformed id. It is a 404
+now.
+
+**Answer level — one row per question in `query_log`.** Route, per-stage
+timings, retrieved section anchors, context size, prompt and completion tokens,
+which backend answered, whether the quote verified, cited RFCs. These are not
+HTTP concerns; no access log can see them, which is why they warrant a table.
+
+`GET /metrics` keeps the two apart:
+
+```
+http      requests, status classes, p50/p95/max per route
+quota     used today vs the global daily cap
+cache     entries and hits
+answers   route mix, grounding, refusals, token spend
+```
+
+### Known gap
+
+Requests rejected before `ask()` runs — bad input, rate limits, cache hits —
+appear in the HTTP log but create no `query_log` row, so answer-level metrics
+undercount traffic. The HTTP layer is the honest source for volume.
+
+## Observability (detail)
+
 Every question writes one row to `query_log`: route, per-stage timings, retrieved section anchors, context size, real prompt/completion tokens, which client backend answered, whether the quote verified, the cited RFCs, and the error if it failed.
 
 Recording happens inside `ask()`, so the CLI, the evaluation harness and any future HTTP interface are all covered, and it is wrapped so that a logging failure can never affect an answer.

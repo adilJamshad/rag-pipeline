@@ -145,3 +145,11 @@ def connect_max_messages(chat_id: str, limit: int):
         cur.execute("update chat set max_messages = %s where id = %s", (limit, chat_id))
         conn.commit()
     yield
+
+
+@pytest.mark.parametrize("bad", ["not-a-uuid", "", "123", "' or 1=1 --"])
+def test_a_malformed_id_is_a_missing_chat_not_a_server_error(bad):
+    with pytest.raises(chat.ChatMissing):
+        chat.get(bad)
+    with pytest.raises(chat.ChatMissing):
+        chat.messages(bad)

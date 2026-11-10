@@ -78,7 +78,16 @@ def create(client: str | None = None, budget: int = DEFAULT_BUDGET) -> Chat:
     return Chat(*row)
 
 
+def _as_uuid(chat_id: str) -> str:
+    """A malformed id is a missing chat, not a database error."""
+    try:
+        return str(uuid.UUID(str(chat_id)))
+    except (ValueError, AttributeError, TypeError):
+        raise ChatMissing(f"chat {chat_id} not found") from None
+
+
 def get(chat_id: str) -> Chat:
+    chat_id = _as_uuid(chat_id)
     with connect() as conn, conn.cursor() as cur:
         cur.execute("""select id, title, state, token_budget, tokens_used,
                               message_count, max_messages
@@ -90,6 +99,7 @@ def get(chat_id: str) -> Chat:
 
 
 def messages(chat_id: str) -> list[dict]:
+    chat_id = _as_uuid(chat_id)
     with connect() as conn, conn.cursor() as cur:
         cur.execute("""select position, role, content, at, route, quote, verified,
                               sources, tokens_in, tokens_out, resolved_question
@@ -99,6 +109,7 @@ def messages(chat_id: str) -> list[dict]:
 
 
 def recent(chat_id: str, turns: int = HISTORY_TURNS) -> list[tuple[str, str]]:
+    chat_id = _as_uuid(chat_id)
     with connect() as conn, conn.cursor() as cur:
         cur.execute("""select role, content from message
                         where chat_id = %s order by position desc limit %s""",

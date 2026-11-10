@@ -10,6 +10,7 @@ import os
 import time
 
 from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
@@ -20,7 +21,7 @@ from ..models import Answer
 from ..services import chat as chat_service
 from ..services import supersession
 from ..services.answering import ask
-from . import guards
+from . import guards, httplog
 
 app = FastAPI(
     title="rfc-rag",
@@ -29,6 +30,9 @@ app = FastAPI(
 )
 log = logging.getLogger(__name__)
 STARTED = time.time()
+
+httplog.setup(os.getenv("LOG_LEVEL", "INFO"))
+app.add_middleware(httplog.RequestLog)
 METRICS_TOKEN = os.getenv("METRICS_TOKEN", "")
 
 
@@ -110,12 +114,6 @@ async def _upstream(request: Request, exc: LLMError):
     return JSONResponse({"error": "The model backend is unavailable."}, status_code=502)
 
 
-@app.exception_handler(Exception)
-async def _unhandled(request: Request, exc: Exception):
-    log.exception("unhandled error on %s", request.url.path)
-    return JSONResponse({"error": "Internal error."}, status_code=500)
-
-
 @app.exception_handler(corpus.EmbeddingMismatch)
 async def _mismatch(request: Request, exc: corpus.EmbeddingMismatch):
     log.error("corpus mismatch: %s", exc)
@@ -127,6 +125,11 @@ async def _mismatch(request: Request, exc: corpus.EmbeddingMismatch):
 async def _rejected(request: Request, exc: guards.Rejected):
     headers = {"Retry-After": str(exc.retry_after)} if exc.retry_after else None
     return JSONResponse({"error": exc.detail}, status_code=exc.status, headers=headers)
+
+
+@app.exception_handler(RequestValidationError)
+async def _invalid(request: Request, exc: RequestValidationError):
+    return JSONResponse({"error": "Malformed request body."}, status_code=422)
 
 
 @app.post("/ask")
@@ -256,9 +259,12 @@ def metrics(request: Request):
         cur.execute("""select count(*) from query_log
                         where at > now() - interval '1 day' and not cached""")
         today = cur.fetchone()[0]
-    report["cache"] = {"entries": entries, "hits": hits}
-    report["quota"] = {"used_today": today, "global_daily_limit": guards.GLOBAL_PER_DAY}
-    return report
+    return {
+        "http": httplog.summary(),
+        "quota": {"used_today": today, "global_daily_limit": guards.GLOBAL_PER_DAY},
+        "cache": {"entries": entries, "hits": hits},
+        "answers": report,
+    }
 
 
 def _tag(client: str, answer: Answer) -> None:

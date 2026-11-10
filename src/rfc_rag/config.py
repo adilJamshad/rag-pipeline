@@ -24,6 +24,8 @@ _dims = os.getenv("EMBED_DIMENSIONS", "").strip()
 EMBED_DIMENSIONS = int(_dims) if _dims else None
 
 LLM_BACKEND = os.getenv("LLM_BACKEND", "direct")
+# Embeddings may use a different backend from chat; defaults to the chat one.
+EMBED_BACKEND = os.getenv("EMBED_BACKEND", "") or LLM_BACKEND
 LLM_FALLBACKS = [b.strip() for b in os.getenv("LLM_FALLBACKS", "").split(",") if b.strip()]
 
 OMLX_SETTINGS = Path.home() / ".omlx" / "settings.json"

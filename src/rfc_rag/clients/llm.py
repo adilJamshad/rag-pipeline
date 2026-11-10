@@ -14,7 +14,8 @@ from .base import LLMError
 
 log = logging.getLogger(__name__)
 
-BACKENDS = {"direct": "._direct", "langchain": "._langchain", "llamaindex": "._llamaindex"}
+BACKENDS = {"direct": "._direct", "langchain": "._langchain",
+            "llamaindex": "._llamaindex", "local": "._local"}
 
 _loaded: dict[str, object] = {}
 last_used: str | None = None
@@ -67,7 +68,7 @@ def embed(texts: list[str]) -> list[list[float]]:
     would corrupt retrieval silently. One backend, or an error.
     """
     global last_used
-    backend = load(config.LLM_BACKEND)
+    backend = load(config.EMBED_BACKEND)
     vectors = backend.embed(texts)
-    last_used = config.LLM_BACKEND
+    last_used = config.EMBED_BACKEND
     return vectors

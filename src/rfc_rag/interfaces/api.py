@@ -17,6 +17,7 @@ from .. import corpus, observability
 from ..clients.base import LLMError
 from ..db import connect
 from ..models import Answer
+from ..services import chat as chat_service
 from ..services import supersession
 from ..services.answering import ask
 from . import guards
@@ -33,6 +34,10 @@ METRICS_TOKEN = os.getenv("METRICS_TOKEN", "")
 
 class Question(BaseModel):
     question: str = Field(..., examples=["What is the maximum length of a DNS label?"])
+
+
+class NewChat(BaseModel):
+    token_budget: int | None = Field(None, ge=1000, le=200_000)
 
 
 def _client(request: Request) -> str:
@@ -157,6 +162,56 @@ def rfc_endpoint(number: int):
         "summary": fact.headline,
         "url": fact.url,
     }
+
+
+@app.exception_handler(chat_service.ChatClosed)
+async def _closed(request: Request, exc: chat_service.ChatClosed):
+    return JSONResponse({"error": str(exc), "state": "readonly"}, status_code=409)
+
+
+@app.exception_handler(chat_service.ChatMissing)
+async def _missing(request: Request, exc: chat_service.ChatMissing):
+    return JSONResponse({"error": str(exc)}, status_code=404)
+
+
+def _chat_json(c: chat_service.Chat) -> dict:
+    return {"id": str(c.id), "title": c.title, "state": c.state,
+            "readonly": c.readonly, "tokens_used": c.tokens_used,
+            "token_budget": c.token_budget, "tokens_left": c.tokens_left,
+            "message_count": c.message_count, "max_messages": c.max_messages,
+            "turns_left": c.turns_left}
+
+
+@app.post("/chats", status_code=201)
+def create_chat(body: NewChat | None = None, request: Request = None):
+    budget = (body.token_budget if body and body.token_budget
+              else chat_service.DEFAULT_BUDGET)
+    return _chat_json(chat_service.create(_client(request), budget))
+
+
+@app.get("/chats")
+def list_chats(request: Request):
+    return {"chats": chat_service.listing(_client(request))}
+
+
+@app.get("/chats/{chat_id}")
+def get_chat(chat_id: str):
+    c = chat_service.get(chat_id)
+    return {**_chat_json(c), "messages": chat_service.messages(chat_id)}
+
+
+@app.post("/chats/{chat_id}/messages")
+def send_message(chat_id: str, body: Question, request: Request):
+    question = guards.clean_question(body.question)
+    client = _client(request)
+    guards.check_rate(client)
+
+    turn = chat_service.send(chat_id, question, _sources)
+    payload = _payload(turn.answer)
+    _tag(client, turn.answer)
+    return {**payload, "chat": _chat_json(turn.chat),
+            "resolved_question": turn.resolved_question
+                                 if turn.resolved_question != question else None}
 
 
 @app.get("/healthz")

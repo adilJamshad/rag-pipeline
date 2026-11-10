@@ -169,6 +169,7 @@ def test_embed_never_falls_back(monkeypatch):
         def embed(self, texts):
             return [[0.0] * 384 for _ in texts]
 
+    monkeypatch.setattr(config, "EMBED_BACKEND", "a")
     monkeypatch.setattr(config, "LLM_BACKEND", "a")
     monkeypatch.setattr(config, "LLM_FALLBACKS", ["b"])
     monkeypatch.setitem(llm.BACKENDS, "a", "x")
@@ -201,3 +202,24 @@ def test_successful_responses_pass_through():
         is_success = True
 
     _direct._raise_for_status(Resp(), "/embeddings")
+
+
+def test_embeddings_may_use_a_different_backend_from_chat(monkeypatch):
+    from rfc_rag import config
+
+    class Chat:
+        def complete(self, prompt, **kw): return "from chat backend"
+
+    class Embed:
+        def embed(self, texts): return [[0.0] * 384 for _ in texts]
+
+    monkeypatch.setattr(config, "LLM_BACKEND", "chat")
+    monkeypatch.setattr(config, "EMBED_BACKEND", "embed")
+    monkeypatch.setattr(config, "LLM_FALLBACKS", [])
+    monkeypatch.setitem(llm.BACKENDS, "chat", "x")
+    monkeypatch.setitem(llm.BACKENDS, "embed", "y")
+    monkeypatch.setitem(llm._loaded, "chat", Chat())
+    monkeypatch.setitem(llm._loaded, "embed", Embed())
+    assert llm.complete("q") == "from chat backend"
+    assert len(llm.embed(["q"])[0]) == 384
+    assert llm.last_used == "embed"

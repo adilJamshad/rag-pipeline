@@ -151,3 +151,15 @@ def test_rfc_endpoint_needs_no_model():
 
 def test_unknown_rfc_is_404():
     assert client.get("/rfc/99999").status_code == 404
+
+
+def test_the_ui_is_served_at_root():
+    r = client.get("/")
+    assert r.status_code == 200
+    assert r.headers["content-type"].startswith("text/html")
+    assert "<title>RFC Chat</title>" in r.text
+
+
+def test_the_ui_ships_with_the_package():
+    from rfc_rag.interfaces.api import UI
+    assert UI.exists(), "static/index.html missing from the package"

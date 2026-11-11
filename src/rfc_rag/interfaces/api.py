@@ -8,10 +8,11 @@ request.
 import logging
 import os
 import time
+from pathlib import Path
 
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel, Field
 
 from .. import corpus, observability
@@ -30,6 +31,7 @@ app = FastAPI(
 )
 log = logging.getLogger(__name__)
 STARTED = time.time()
+UI = Path(__file__).parent / "static" / "index.html"
 
 httplog.setup(os.getenv("LOG_LEVEL", "INFO"))
 app.add_middleware(httplog.RequestLog)
@@ -130,6 +132,11 @@ async def _rejected(request: Request, exc: guards.Rejected):
 @app.exception_handler(RequestValidationError)
 async def _invalid(request: Request, exc: RequestValidationError):
     return JSONResponse({"error": "Malformed request body."}, status_code=422)
+
+
+@app.get("/", include_in_schema=False)
+def home():
+    return FileResponse(UI, media_type="text/html")
 
 
 @app.post("/ask")

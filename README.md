@@ -107,13 +107,22 @@ Every row here was a belief I held before building, overturned by a measurement.
 | 12 | A similarity threshold separates answerable from unanswerable questions | Distributions overlap: worst answerable **0.687**, best unanswerable **0.688** | Cosine similarity measures topical closeness, not whether a passage answers a question. "Write me a Python script to query DNS" is about DNS and retrieves DNS text; the specs simply do not answer it |
 | 13 | Demoting obsolete RFCs would improve the scores | MRR moved 0.483 → 0.488, but the top-5 for "SOA record fields" lost both dead 1983 documents | The eval set measures whether gold was found, not whether junk was avoided. A metric can miss a real user-facing improvement |
 
-## HTTP API
+## HTTP API and chat UI
 
     uv run uvicorn rfc_rag.interfaces.api:app --port 8000
 
+Then open <http://localhost:8000>. The chat page is one HTML file served from
+the API — no build step, no npm, no framework. It shows the answer, the quote
+with a verified badge and a link to the exact section, every RFC researched
+with its supersession warning, and a token meter that greys out the input when
+the chat goes read-only.
+
 | Endpoint | Model calls | Notes |
 |---|---|---|
-| `POST /ask` | 0 or 1 | rate limited, cached, returns every RFC researched |
+| `GET /` | 0 | the chat page |
+| `POST /chats` · `GET /chats` · `GET /chats/{id}` | 0 | conversations and history |
+| `POST /chats/{id}/messages` | 0 or 1 | a turn; 409 once the chat is read-only |
+| `POST /ask` | 0 or 1 | stateless, rate limited, cached, returns every RFC researched |
 | `GET /rfc/{n}` | **0** | supersession facts, SQL only, unlimited |
 | `GET /healthz` | 0 | 503 until every section is embedded |
 | `GET /metrics` | 0 | counts, route mix, p50/p95, cache and quota use |

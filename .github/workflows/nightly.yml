@@ -1,0 +1,11 @@
+name: nightly-eval
+
+on:
+  schedule:
+    - cron: "0 3 * * *"
+  workflow_dispatch:
+
+jobs:
+  eval:
+    uses: ./.github/workflows/ci.yml
+    secrets: inherit

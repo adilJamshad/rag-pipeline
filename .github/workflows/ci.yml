@@ -1,0 +1,104 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+  workflow_call:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      db:
+        image: pgvector/pgvector:pg17
+        env:
+          POSTGRES_USER: rfc
+          POSTGRES_PASSWORD: rfc
+          POSTGRES_DB: rfc
+        ports: ["5433:5432"]
+        options: >-
+          --health-cmd "pg_isready -U rfc -d rfc"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql://rfc:rfc@localhost:5433/rfc
+      EMBED_BACKEND: local
+      EMBED_MODEL: bge-small-en-v1.5
+      EMBED_DIM: "384"
+      LLM_BACKEND: direct
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - run: uv sync --frozen
+
+      # Schema and the fixture corpus are applied by tests/conftest.py, so an
+      # empty database is the supported starting point. Live model tests skip
+      # on their own when no provider is reachable.
+      - name: tests
+        run: uv run pytest -q
+
+      - name: schema applies to an empty database
+        run: |
+          uv run python - <<'PY'
+          from rfc_rag.db import connect
+          want = {"rfc", "rfc_relation", "section", "query_log", "chat",
+                  "message", "eval_run", "eval_result", "corpus_meta", "answer_cache"}
+          with connect() as c, c.cursor() as cur:
+              cur.execute("select table_name from information_schema.tables "
+                          "where table_schema = 'public'")
+              have = {r[0] for r in cur.fetchall()}
+          missing = want - have
+          assert not missing, f"migrations did not create: {sorted(missing)}"
+          print(f"{len(have)} tables present")
+          PY
+
+  eval:
+    # Needs a model provider, so it only runs where a key exists: on demand,
+    # or nightly. A pull request from a fork has no secrets and would fail
+    # for a reason that has nothing to do with the change.
+    if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule' || github.event_name == 'workflow_call'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    services:
+      db:
+        image: pgvector/pgvector:pg17
+        env:
+          POSTGRES_USER: rfc
+          POSTGRES_PASSWORD: rfc
+          POSTGRES_DB: rfc
+        ports: ["5433:5432"]
+        options: >-
+          --health-cmd "pg_isready -U rfc -d rfc"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql://rfc:rfc@localhost:5433/rfc
+      EMBED_BACKEND: local
+      EMBED_MODEL: bge-small-en-v1.5
+      EMBED_DIM: "384"
+      LLM_BACKEND: direct
+      LLM_BASE_URL: ${{ vars.LLM_BASE_URL }}
+      LLM_MODEL: ${{ vars.LLM_MODEL }}
+      LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with: { enable-cache: true }
+      - run: uv sync --frozen
+
+      - name: build the corpus
+        run: |
+          uv run python -m rfc_rag.ingest.run
+          uv run python -m rfc_rag.ingest.embeddings
+          uv run python -m rfc_rag.evaluation.build
+
+      - name: eval against the committed baseline
+        run: uv run python -m rfc_rag.evaluation.gate "ci ${{ github.sha }}"

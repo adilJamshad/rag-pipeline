@@ -1,0 +1,13 @@
+{
+  "_n_questions": 30.0,
+  "_note": "run 1, 2026-11-10, bge-small embeddings",
+  "cited_right": 0.655,
+  "correct": 0.966,
+  "doc_r1": 0.267,
+  "doc_r10": 0.833,
+  "doc_r5": 0.733,
+  "false_refusal_rate": 0.033,
+  "grounded": 0.897,
+  "mrr": 0.441,
+  "refusal_accuracy": 0.7
+}

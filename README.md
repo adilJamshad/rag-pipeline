@@ -296,6 +296,30 @@ uv run python -m rfc_rag.evaluation.build    regenerate the question sets
 uv run python -m rfc_rag.evaluation.run      score everything
 ```
 
+## Continuous integration
+
+Two workflows. **`ci`** runs on every push and pull request: a pgvector service
+container, the full suite against an **empty** database, and a check that the
+migrations actually create every table.
+
+**`nightly-eval`** runs the real evaluation at 03:00 and on demand. It is
+separate because it needs a model provider, and a pull request from a fork has
+no secrets — failing it there would fail for a reason unrelated to the change.
+
+Two bugs surfaced while setting this up, both from the suite having only ever
+run on a loaded developer machine:
+
+- a test called `corpus.stamp()` against the live database, mislabelling a
+  corpus of Gemini vectors as bge-small and disabling the guard built to catch
+  exactly that
+- `chat.max_messages` had been added with an `ALTER TABLE` typed into psql and
+  never written to a migration, so the schema in git did not match the running
+  database
+
+`tests/conftest.py` now applies the migrations and seeds a small fixture corpus,
+so an empty Postgres is the supported starting point, and an autouse fixture
+restores `corpus_meta` if any test changes it.
+
 ## Running it
 
     uv sync

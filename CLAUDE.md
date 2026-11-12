@@ -68,6 +68,14 @@ Every question is recorded to `query_log` from inside `ask()`. Recording is wrap
 
 Real token counts come from `llm.last_usage`, which only the `direct` backend populates — the framework backends do not surface usage, so those rows have null token columns.
 
+## CI and schema
+
+- **Every schema change goes in a file under `sql/`.** `chat.max_messages` was once typed into psql directly and CI caught the drift weeks later. Migrations must be safe to re-run: `create table if not exists`, `add column if not exists`.
+- `tests/conftest.py` applies all migrations and seeds a fixture corpus, so the suite must pass against an **empty** Postgres, not just a loaded machine.
+- No test may leave `corpus_meta` changed; an autouse fixture restores it.
+- `eval/baseline.json` is the quality gate. Do not edit it to make a build pass — `--save-baseline` rewrites it, and a drop should be justified in the diff.
+- `false_refusal_rate` is watched inverted. Refusing more makes every other metric look better, so it is the metric that keeps the others honest.
+
 ## Commands
 
     uv sync                                      install
@@ -78,6 +86,7 @@ Real token counts come from `llm.last_usage`, which only the `direct` backend po
     uv run rfc "<question>"                      ask
     uv run rfc --stats                           usage, latency, failures
     uv run pytest                                tests
+    uv run python -m rfc_rag.evaluation.gate     eval against the committed baseline
 
 ## Conventions
 

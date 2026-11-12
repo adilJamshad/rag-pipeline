@@ -34,3 +34,7 @@ create table if not exists message (
 
 create index if not exists chat_client_idx on chat (client, updated_at desc);
 create index if not exists message_chat_idx on message (chat_id, position);
+
+-- A chat of facts-route turns costs no tokens, so the budget alone would never
+-- close it. Added after the table, so it applies to databases created earlier.
+alter table chat add column if not exists max_messages int not null default 60;

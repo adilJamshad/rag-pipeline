@@ -92,7 +92,8 @@ def answers(ranks: dict[str, int | None]) -> tuple[dict, list[dict]]:
     return metrics, per_question
 
 
-def main(label: str | None = None, save: bool = True) -> int | None:
+def main(label: str | None = None, save: bool = True,
+         return_metrics: bool = False):
     print("=== retrieval (gold = the authoritative RFC, named from the domain) ===")
     scores = {}
     for name, fn in {
@@ -129,7 +130,7 @@ def main(label: str | None = None, save: bool = True) -> int | None:
             print(f"    {p['id']:<12} {why:<18} {p['question'][:48]}")
 
     if not save:
-        return None
+        return metrics if return_metrics else None
 
     run_id = store.save(metrics, per_question, label=label)
     print()
@@ -148,7 +149,7 @@ def main(label: str | None = None, save: bool = True) -> int | None:
         broke = store.regressions(run_id, prev["id"])
         for r in broke:
             print(f"  REGRESSED  {r['question_id']}  {r['question'][:50]}")
-    return run_id
+    return metrics if return_metrics else run_id
 
 
 if __name__ == "__main__":

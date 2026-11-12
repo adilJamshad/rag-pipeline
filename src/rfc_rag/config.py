@@ -37,13 +37,25 @@ def _omlx_key() -> str:
     return ""
 
 
-def api_key() -> str:
-    key = os.getenv("LLM_API_KEY")
-    if key:
-        return key
-    if "127.0.0.1:8000" in LLM_BASE_URL:
-        return _omlx_key()
+# Provider-specific keys, so a .env can hold several without renaming.
+PROVIDER_KEYS = {
+    "api.groq.com": "GROQ_API_KEY",
+    "generativelanguage.googleapis.com": "GEMINI_API_KEY",
+    "api.openai.com": "OPENAI_API_KEY",
+}
+
+
+def _provider_key(base_url: str) -> str:
+    for host, var in PROVIDER_KEYS.items():
+        if host in base_url:
+            return os.getenv(var, "")
     return ""
+
+
+def api_key() -> str:
+    return (os.getenv("LLM_API_KEY")
+            or _provider_key(LLM_BASE_URL)
+            or (_omlx_key() if "127.0.0.1:8000" in LLM_BASE_URL else ""))
 
 
 def embed_api_key() -> str:

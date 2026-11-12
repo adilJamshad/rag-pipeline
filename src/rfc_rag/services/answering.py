@@ -72,11 +72,29 @@ def _generate(prompt: str, kept: list[Hit], trace: Trace, model: str):
     return raw, parsed, stages.verify(quote, used or kept), used, quote
 
 
-def _facts_answer(number: int, trace: Trace) -> Answer:
+def _facts_answer(number: int, trace: Trace, inferred: bool = False) -> Answer:
     fact = supersession.lookup(number)
     if not fact:
         return Answer("facts", f"RFC {number} is not in this corpus.", trace)
-    return Answer("facts", fact.headline, trace, fact=fact)
+    text = fact.headline
+    if inferred:
+        # The facts below are SQL, but nothing proved this is the document the
+        # question meant. Say so rather than borrowing the route's authority.
+        text = (f"Taking that as a question about RFC {fact.rfc} "
+                f"({fact.title}). {text}")
+    return Answer("facts", text, trace, fact=fact, inferred_subject=inferred)
+
+
+def _recent_changes_answer(trace: Trace) -> Answer:
+    changes = supersession.recent_changes()
+    if not changes:
+        return Answer("refusal", "No changes are recorded in this corpus.", trace)
+    newest = changes[0]
+    others = [c for c in changes[1:] if c.year == newest.year]
+    text = f"The most recent change in this corpus is from {newest.year}: {newest.sentence}."
+    if others:
+        text += f" {len(others)} other change{'s' if len(others) != 1 else ''} landed the same year."
+    return Answer("recent_changes", text, trace, changes=changes)
 
 
 def ask(question: str) -> Answer:
@@ -103,6 +121,10 @@ def _ask(question: str) -> Answer:
         trace.route = "facts"
         return _facts_answer(analysis.rfc_refs[0], trace)
 
+    if route == "recent_changes":
+        trace.route = "recent_changes"
+        return _recent_changes_answer(trace)
+
     if route == "topic_facts":
         started = time.time()
         number = resolve_topic(question)
@@ -110,7 +132,7 @@ def _ask(question: str) -> Answer:
         trace.step("resolve_topic", started)
         if number:
             trace.route = "facts"
-            return _facts_answer(number, trace)
+            return _facts_answer(number, trace, inferred=True)
         route = "synthesis"
 
     hits = gather(analysis, route, trace)

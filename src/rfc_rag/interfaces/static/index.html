@@ -129,7 +129,7 @@
 <script>
 const $ = id => document.getElementById(id);
 const thread = $('thread'), input = $('input'), notice = $('notice');
-let chatId = null, busy = false;
+let chatId = null, busy = false, closed = false;
 
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c =>
   ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -191,8 +191,22 @@ function factHtml(f) {
   return `<details class="sources" open><summary>supersession</summary>${rows.join('')}</details>`;
 }
 
+function changesHtml(changes) {
+  if (!changes?.length) return '';
+  const rows = changes.map(c => `<div class="src"><div class="head">
+    <a href="https://www.rfc-editor.org/rfc/rfc${esc(c.rfc)}" target="_blank" rel="noopener">RFC ${esc(c.rfc)}</a>
+    <span class="sec">${esc(c.year)} · ${c.kind === 'obsoletes' ? 'replaced' : 'updated'}
+    <a href="https://www.rfc-editor.org/rfc/rfc${esc(c.affects)}" target="_blank" rel="noopener">RFC ${esc(c.affects)}</a>
+    — ${esc(c.affects_title)}</span></div></div>`).join('');
+  return `<details class="sources" open><summary>${changes.length} most recent changes</summary>${rows}</details>`;
+}
+
 function answerHtml(d) {
-  let html = `<div>${esc(d.answer)}</div>`;
+  let html = '';
+  if (d.inferred_subject) {
+    html += `<div class="alert">No RFC was named, so the document below was inferred from the question.</div>`;
+  }
+  html += `<div>${esc(d.answer)}</div>`;
   if (d.quote) {
     const src = (d.sources || []).flatMap(s =>
       (s.sections || []).filter(x => x.quoted).map(x => ({ ...x, rfc: s.rfc })))[0];
@@ -206,7 +220,7 @@ function answerHtml(d) {
   } else {
     html += `<div class="cite"><span class="badge route">${esc(d.route)}</span></div>`;
   }
-  return html + factHtml(d.fact) + sourcesHtml(d.sources);
+  return html + changesHtml(d.changes) + factHtml(d.fact) + sourcesHtml(d.sources);
 }
 
 function meter(chat) {
@@ -222,12 +236,23 @@ function meter(chat) {
     ? 'This chat reached its limit and is read-only. Start a new chat to continue.' : '');
 }
 
+// `closed` is the chat's own state and `busy` is this request's. They are kept
+// apart because deriving one from input.disabled means the busy flag looks
+// like a closed chat, and the input never comes back.
 function setLocked(locked, message) {
-  input.disabled = locked || busy;
-  $('send').disabled = locked || busy;
-  notice.hidden = !message;
-  notice.textContent = message || '';
-  if (!locked && !busy) input.focus();
+  closed = locked;
+  refresh(message);
+}
+
+function refresh(message) {
+  const stop = closed || busy;
+  input.disabled = stop;
+  $('send').disabled = stop;
+  if (message !== undefined) {
+    notice.hidden = !message;
+    notice.textContent = message || '';
+  }
+  if (!stop) input.focus();
 }
 
 async function api(path, options) {
@@ -243,7 +268,8 @@ async function newChat() {
   thread.innerHTML = `<div class="empty">Ask about DNS specifications.<br>
     Try <code>is RFC 2065 still current</code> or <code>what is the maximum length of a DNS label</code></div>`;
   meter(null);
-  setLocked(false, '');
+  closed = false;
+  refresh('');
 }
 
 $('new').onclick = newChat;
@@ -262,7 +288,7 @@ $('form').onsubmit = async e => {
   if (!question || busy) return;
 
   busy = true;
-  setLocked(false, '');
+  refresh();
   input.value = '';
   input.style.height = 'auto';
   say('user', esc(question));
@@ -288,7 +314,7 @@ $('form').onsubmit = async e => {
                                     tokens_used: 1, token_budget: 1, turns_left: 0 });
   } finally {
     busy = false;
-    if (!input.disabled) setLocked(false, notice.hidden ? '' : notice.textContent);
+    refresh();
     scroll();
   }
 };

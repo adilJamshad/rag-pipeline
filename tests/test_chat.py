@@ -153,3 +153,21 @@ def test_a_malformed_id_is_a_missing_chat_not_a_server_error(bad):
         chat.get(bad)
     with pytest.raises(chat.ChatMissing):
         chat.messages(bad)
+
+
+def test_an_inferred_subject_is_declared_in_the_answer(monkeypatch):
+    """A guessed document must not borrow the facts route's authority."""
+    from rfc_rag.models import Fact
+    from rfc_rag.services import answering, supersession
+
+    fact = Fact(3226, "DNSSEC and IPv6", 2001, "PROPOSED STANDARD", False, [], [4033],
+                [(3226, "DNSSEC and IPv6")])
+    monkeypatch.setattr(supersession, "lookup", lambda n: fact)
+
+    named = answering._facts_answer(3226, Trace("q"), inferred=False)
+    guessed = answering._facts_answer(3226, Trace("q"), inferred=True)
+
+    assert not named.inferred_subject
+    assert not named.text.startswith("Taking that")
+    assert guessed.inferred_subject
+    assert "Taking that as a question about RFC 3226" in guessed.text

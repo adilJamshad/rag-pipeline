@@ -88,6 +88,11 @@ def _payload(answer: Answer) -> dict:
         "quote": answer.quote,
         "verified": answer.grounded,
         "sources": _sources(answer),
+        "inferred_subject": answer.inferred_subject,
+        "changes": [{"kind": c.kind, "rfc": c.src, "year": c.year,
+                     "title": c.src_title, "affects": c.dst,
+                     "affects_title": c.dst_title, "summary": c.sentence}
+                    for c in answer.changes],
         "fact": ({"rfc": answer.fact.rfc, "status": answer.fact.status,
                   "obsolete": answer.fact.obsolete,
                   "replaced_by": answer.fact.obsoleted_by or None,

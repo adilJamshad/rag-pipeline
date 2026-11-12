@@ -90,6 +90,23 @@ class Fact:
 
 
 @dataclass
+class Change:
+    """One edge of the supersession graph, with both documents named."""
+
+    kind: str
+    src: int
+    src_title: str
+    year: int | None
+    dst: int
+    dst_title: str
+
+    @property
+    def sentence(self) -> str:
+        verb = "replaced" if self.kind == "obsoletes" else "updated"
+        return f"RFC {self.src} ({self.year}) {verb} RFC {self.dst}"
+
+
+@dataclass
 class Analysis:
     """What `analyse` extracted from the question."""
 
@@ -135,6 +152,10 @@ class Answer:
     grounded: bool | None = None
     fact: Fact | None = None
     status: list[Fact] = field(default_factory=list)
+    changes: list[Change] = field(default_factory=list)
+    # True when no RFC was named and the subject was inferred from the
+    # question. The facts are still SQL, but the choice of document is a guess.
+    inferred_subject: bool = False
 
 
 @dataclass

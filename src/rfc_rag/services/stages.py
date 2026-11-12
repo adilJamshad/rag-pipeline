@@ -10,6 +10,15 @@ CONTEXT_TOKENS = 3500
 RFC_REF = re.compile(r"\brfc[\s-]*(\d{1,5})\b", re.I)
 SECTION_REF = re.compile(r"(?:\bsection\s*|§\s*)(\d+(?:\.\d+)*)", re.I)
 
+# "What changed recently?" is about the corpus, not about one document. Without
+# its own route it matched the `updated` intent, lost its RFC number to nothing,
+# and was answered with facts about whichever document a vague query happened to
+# retrieve.
+_WHEN = r"(last|latest|most recent|recent(ly)?|newest|new)"
+_WHAT = r"(chang|updat|revis|amend|supersed|obsolet|publish)\w*"
+RECENT_CHANGE = re.compile(
+    rf"\b{_WHEN}\b.{{0,40}}\b{_WHAT}|\b{_WHAT}.{{0,40}}\b{_WHEN}\b", re.I)
+
 INTENTS = [
     ("current", re.compile(r"\b(still (current|valid|in force)|current|valid|up to date|obsolete|dead)\b", re.I)),
     ("replaced", re.compile(r"\b(replac|supersed|obsolet|instead of|what should i read)\w*\b", re.I)),
@@ -52,6 +61,8 @@ def analyse(question: str) -> Analysis:
 def plan(analysis: Analysis) -> str:
     if analysis.rfc_refs and analysis.intent:
         return "facts"
+    if not analysis.rfc_refs and RECENT_CHANGE.search(analysis.question):
+        return "recent_changes"
     if analysis.intent and not analysis.rfc_refs:
         return "topic_facts"
     if analysis.rfc_refs:

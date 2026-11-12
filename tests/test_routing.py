@@ -47,3 +47,38 @@ def test_change_sentence_reads_correctly():
     upd = Change("updates", 9975, "Clarifications", 2026, 7344, "Automating")
     assert obs.sentence == "RFC 10001 (2026) replaced RFC 3901"
     assert upd.sentence == "RFC 9975 (2026) updated RFC 7344"
+
+
+@pytest.mark.parametrize("question", [
+    "what does the last rfc on dns say?",
+    "what is the newest DNS RFC",
+    "which is the latest DNS specification",
+    "show me the most recent RFCs",
+    "what is the newest DNS standard",
+])
+def test_recency_about_the_subject_gets_a_date_ordered_route(question):
+    """'the last RFC' is a date constraint; similarity cannot represent it."""
+    assert stages.plan(stages.analyse(question)) == "recent_documents"
+
+
+def test_recency_about_an_event_is_still_a_different_route():
+    """'last change' and 'last RFC' are different questions."""
+    assert stages.plan(stages.analyse("what changed last")) == "recent_changes"
+    assert stages.plan(stages.analyse("what is the last RFC")) == "recent_documents"
+
+
+def test_a_named_rfc_beats_both_recency_routes():
+    assert stages.plan(stages.analyse("what does the latest RFC 1035 update say")) == "facts"
+
+
+@pytest.mark.parametrize("question,expected", [
+    ("what do RFCs published since 2020 say about NSEC3", "since"),
+    ("what was the first DNS specification", "first"),
+    ("which is the oldest DNS RFC still in force", "oldest"),
+    ("what changed in 2024", "in 2024"),
+    ("what is a CNAME record", None),
+    ("how do wildcards work", None),
+])
+def test_unrepresentable_constraints_are_detected(question, expected):
+    got = stages.unrepresentable_constraint(question)
+    assert (got.lower() if got else None) == expected

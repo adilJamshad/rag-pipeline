@@ -16,8 +16,23 @@ SECTION_REF = re.compile(r"(?:\bsection\s*|§\s*)(\d+(?:\.\d+)*)", re.I)
 # retrieve.
 _WHEN = r"(last|latest|most recent|recent(ly)?|newest|new)"
 _WHAT = r"(chang|updat|revis|amend|supersed|obsolet|publish)\w*"
+
+# Recency as an event: "what changed last".
 RECENT_CHANGE = re.compile(
     rf"\b{_WHEN}\b.{{0,40}}\b{_WHAT}|\b{_WHAT}.{{0,40}}\b{_WHEN}\b", re.I)
+
+# Recency as the subject: "the last RFC on DNS". A different shape entirely,
+# and the one that slipped through - "last ... say" is not "last ... change".
+RECENT_DOC = re.compile(
+    rf"\b{_WHEN}\b\s+(\w+\s+){{0,2}}\b(rfc|spec|specification|standard|document|draft)s?\b",
+    re.I)
+
+# Anything embeddings cannot represent. Similarity has no notion of time or
+# ordering, so these words contribute noise to retrieval and the answer must
+# not imply the constraint was honoured.
+UNREPRESENTABLE = re.compile(
+    rf"\b({_WHEN}|oldest|first|earliest|before|after|since|in \d{{4}}|"
+    rf"this year|last year)\b", re.I)
 
 INTENTS = [
     ("current", re.compile(r"\b(still (current|valid|in force)|current|valid|up to date|obsolete|dead)\b", re.I)),
@@ -63,6 +78,8 @@ def plan(analysis: Analysis) -> str:
         return "facts"
     if not analysis.rfc_refs and RECENT_CHANGE.search(analysis.question):
         return "recent_changes"
+    if not analysis.rfc_refs and RECENT_DOC.search(analysis.question):
+        return "recent_documents"
     if analysis.intent and not analysis.rfc_refs:
         return "topic_facts"
     if analysis.rfc_refs:
@@ -103,3 +120,9 @@ def verify(quote: str, candidates: list[Hit]) -> bool:
         return False
     needle = normalise(quote)
     return any(needle in normalise(h.body) for h in candidates)
+
+
+def unrepresentable_constraint(question: str) -> str | None:
+    """The part of a question retrieval cannot act on, if any."""
+    m = UNREPRESENTABLE.search(question)
+    return m.group(0) if m else None

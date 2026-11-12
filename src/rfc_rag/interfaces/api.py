@@ -89,6 +89,10 @@ def _payload(answer: Answer) -> dict:
         "verified": answer.grounded,
         "sources": _sources(answer),
         "inferred_subject": answer.inferred_subject,
+        "ignored_constraint": answer.ignored_constraint,
+        "newest": [{"rfc": f.rfc, "title": f.title, "year": f.year,
+                    "status": f.status, "obsolete": f.obsolete,
+                    "url": f.url} for f in answer.newest],
         "changes": [{"kind": c.kind, "rfc": c.src, "year": c.year,
                      "title": c.src_title, "affects": c.dst,
                      "affects_title": c.dst_title, "summary": c.sentence}

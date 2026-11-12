@@ -153,6 +153,10 @@ class Answer:
     fact: Fact | None = None
     status: list[Fact] = field(default_factory=list)
     changes: list[Change] = field(default_factory=list)
+    newest: list[Fact] = field(default_factory=list)
+    # A part of the question retrieval could not act on, such as a date or a
+    # superlative. Set so the answer can say the constraint was not applied.
+    ignored_constraint: str | None = None
     # True when no RFC was named and the subject was inferred from the
     # question. The facts are still SQL, but the choice of document is a guess.
     inferred_subject: bool = False

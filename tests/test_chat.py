@@ -171,3 +171,23 @@ def test_an_inferred_subject_is_declared_in_the_answer(monkeypatch):
     assert not named.text.startswith("Taking that")
     assert guessed.inferred_subject
     assert "Taking that as a question about RFC 3226" in guessed.text
+
+
+def test_synthesis_declares_a_date_constraint_it_could_not_apply(monkeypatch):
+    """Retrieval ignores dates, so an answer must not imply it honoured one."""
+    from rfc_rag.services import answering, stages
+
+    hit = Hit(1, 1035, "section-1", "1", "T", "body text", 0.8)
+    monkeypatch.setattr(answering, "gather", lambda a, r, t: [hit])
+    monkeypatch.setattr(stages, "compose", lambda hits, trace: ("[1] s", [hit]))
+    monkeypatch.setattr(answering.llm, "complete",
+                        lambda *a, **k: '{"answer": "Something.", "used": [1], "quote": "body text"}')
+    monkeypatch.setattr(answering, "statuses", lambda used: [])
+
+    with_date = answering.ask("what do RFCs published since 2020 say about NSEC3")
+    assert with_date.ignored_constraint == "since"
+    assert "not used to filter or order" in with_date.text
+
+    without = answering.ask("what is a CNAME record")
+    assert without.ignored_constraint is None
+    assert "not used to filter" not in without.text

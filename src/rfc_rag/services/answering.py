@@ -85,6 +85,20 @@ def _facts_answer(number: int, trace: Trace, inferred: bool = False) -> Answer:
     return Answer("facts", text, trace, fact=fact, inferred_subject=inferred)
 
 
+def _newest_answer(trace: Trace) -> Answer:
+    docs = supersession.newest()
+    if not docs:
+        return Answer("refusal", "No dated documents in this corpus.", trace)
+    top = docs[0]
+    same_year = [d for d in docs[1:] if d.year == top.year]
+    text = (f"The most recently published RFC in this corpus is RFC {top.rfc} "
+            f"({top.year}) — {top.title}.")
+    if same_year:
+        text += (f" {len(same_year)} other RFC{'s' if len(same_year) != 1 else ''} "
+                 f"were published in {top.year}.")
+    return Answer("recent_documents", text, trace, newest=docs)
+
+
 def _recent_changes_answer(trace: Trace) -> Answer:
     changes = supersession.recent_changes()
     if not changes:
@@ -124,6 +138,10 @@ def _ask(question: str) -> Answer:
     if route == "recent_changes":
         trace.route = "recent_changes"
         return _recent_changes_answer(trace)
+
+    if route == "recent_documents":
+        trace.route = "recent_documents"
+        return _newest_answer(trace)
 
     if route == "topic_facts":
         started = time.time()
@@ -176,5 +194,12 @@ def _ask(question: str) -> Answer:
     trace.step("verify", started)
 
     trace.route = "synthesis"
-    return Answer("synthesis", parsed["answer"].strip(), trace, hits=kept, used=used,
-                  quote=quote or None, grounded=grounded, status=status)
+    ignored = stages.unrepresentable_constraint(question)
+    text = parsed["answer"].strip()
+    if ignored:
+        text = (f"{text}\n\nNote: retrieval ranks by meaning, not by date, so "
+                f"\"{ignored}\" was not used to filter or order these documents. "
+                f"Ask for the newest or most recently changed RFCs to search by date.")
+    return Answer("synthesis", text, trace, hits=kept, used=used,
+                  quote=quote or None, grounded=grounded, status=status,
+                  ignored_constraint=ignored)

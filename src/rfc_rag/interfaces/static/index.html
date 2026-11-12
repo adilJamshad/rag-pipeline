@@ -201,8 +201,21 @@ function changesHtml(changes) {
   return `<details class="sources" open><summary>${changes.length} most recent changes</summary>${rows}</details>`;
 }
 
+function newestHtml(docs) {
+  if (!docs?.length) return '';
+  const rows = docs.map(f => `<div class="src"><div class="head">
+    <a href="${esc(f.url)}" target="_blank" rel="noopener">RFC ${esc(f.rfc)}</a>
+    <span class="sec">${esc(f.year)} · ${esc(f.status || '')}</span></div>
+    <div class="sec">${esc(f.title)}</div>${
+      f.obsolete ? '<div class="alert dead">obsolete</div>' : ''}</div>`).join('');
+  return `<details class="sources" open><summary>${docs.length} most recently published</summary>${rows}</details>`;
+}
+
 function answerHtml(d) {
   let html = '';
+  if (d.ignored_constraint) {
+    html += `<div class="alert">Ranked by meaning, not by date — "${esc(d.ignored_constraint)}" was not applied.</div>`;
+  }
   if (d.inferred_subject) {
     html += `<div class="alert">No RFC was named, so the document below was inferred from the question.</div>`;
   }
@@ -220,7 +233,7 @@ function answerHtml(d) {
   } else {
     html += `<div class="cite"><span class="badge route">${esc(d.route)}</span></div>`;
   }
-  return html + changesHtml(d.changes) + factHtml(d.fact) + sourcesHtml(d.sources);
+  return html + newestHtml(d.newest) + changesHtml(d.changes) + factHtml(d.fact) + sourcesHtml(d.sources);
 }
 
 function meter(chat) {

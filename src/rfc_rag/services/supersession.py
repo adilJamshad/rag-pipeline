@@ -36,3 +36,21 @@ def recent_changes(limit: int = 8) -> list[Change]:
              limit %s
         """, (limit,))
         return [Change(*row) for row in cur.fetchall()]
+
+
+def newest(limit: int = 6) -> list[Fact]:
+    """Most recently published documents, newest first.
+
+    Date ordering, not similarity: "the last RFC" is a constraint embeddings
+    cannot represent, so it must be answered by the column that holds it.
+    """
+    with connect() as conn, conn.cursor() as cur:
+        cur.execute("""
+            select number from rfc
+             where year is not null
+               and exists (select 1 from section s where s.rfc = rfc.number)
+             order by year desc, number desc
+             limit %s
+        """, (limit,))
+        numbers = [r[0] for r in cur.fetchall()]
+    return [f for f in (lookup(n) for n in numbers) if f]

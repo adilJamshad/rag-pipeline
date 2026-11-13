@@ -74,6 +74,17 @@ FastAPI runs sync endpoints in a **threadpool**, so anything at module level is 
 
 Also: `guards._minute` is swept, because one never-expiring entry per client IP retained ~39 MB at 50,000 callers.
 
+## MCP
+
+`interfaces/mcp_server.py`, mounted at `/mcp` in the same process as the API so both share the in-process limiters and the provider budget.
+
+- **Do not add a synthesis tool.** The client has its own model; ours summarising so theirs can paraphrase loses information twice and spends the quota. Return sections, not answers.
+- Keep the tool count low. Definitions are re-sent on every turn — three tools is ~400 tokens of someone else's context budget, forever.
+- The docstring **is** the description the model reads when choosing the tool, and the type hints generate the schema. Write them as prompts, and say *when* to use the tool, not only what it returns.
+- SDK is mcp 2.x: `MCPServer`, not `FastMCP`; `input_schema`, not `inputSchema`. Most examples online are v1. Pinned `mcp>=2.3,<3`.
+- FastAPI does not run a mounted sub-app's lifespan. The MCP app is built first and its `lifespan_context` passed to `FastAPI(...)`, or every call fails with "Task group is not initialized".
+- v2 runs sync tools on worker threads, so MCP tools are concurrent by default. See the Concurrency section.
+
 ## Observability
 
 Every question is recorded to `query_log` from inside `ask()`. Recording is wrapped so it can never break answering — failures are logged, never raised. `QUERY_LOG=0` disables it; `rfc --stats` reports.

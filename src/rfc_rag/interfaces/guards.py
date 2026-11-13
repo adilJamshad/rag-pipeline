@@ -73,6 +73,27 @@ def _sweep(now: float) -> None:
         del _minute[key]
 
 
+def provider_calls_last_minute() -> int:
+    """Model-calling requests across every worker, from the durable log.
+
+    The in-process window only sees one worker. In the cloud there are
+    several, and MCP tools run in the same process but could be scaled apart,
+    so the ceiling that protects the provider has to be shared.
+    """
+    with connect() as conn, conn.cursor() as cur:
+        cur.execute("""select count(*) from query_log
+                        where at > now() - interval '1 minute'
+                          and not cached and llm_calls > 0""")
+        return cur.fetchone()[0]
+
+
+def check_provider_budget() -> None:
+    """Cross-worker guard, checked only before work that calls the model."""
+    if provider_calls_last_minute() >= GLOBAL_PER_MINUTE:
+        raise Rejected(503, "This demo is at its shared per-minute limit. "
+                            "Try again in a moment.", retry_after=30)
+
+
 def check_global_burst() -> None:
     """Keep the whole service under the provider's per-minute ceiling."""
     now = time.time()
@@ -116,9 +137,36 @@ def check_quota(client: str) -> None:
 
 
 def check_rate(client: str) -> None:
+    """For work that will call the model."""
     check_burst(client)
     check_global_burst()
+    check_provider_budget()
     check_quota(client)
+
+
+# MCP tools are mostly SQL and local CPU, measured at 432 and 1015 req/s, so
+# they get their own ceiling an order of magnitude higher. Only the tools that
+# reach the provider pay the provider's price.
+MCP_PER_MINUTE = int(os.getenv("MCP_PER_MINUTE", "120"))
+_mcp_minute: dict[str, deque[float]] = defaultdict(deque)
+
+
+def check_mcp(client: str, calls_model: bool = False) -> None:
+    now = time.time()
+    window = _mcp_minute[client]
+    while window and now - window[0] > 60:
+        window.popleft()
+    if len(window) >= MCP_PER_MINUTE:
+        raise Rejected(429, f"Rate limit: {MCP_PER_MINUTE} tool calls per minute.",
+                       retry_after=int(60 - (now - window[0])) + 1)
+    window.append(now)
+    if len(_mcp_minute) > 10_000:
+        for key in [k for k, v in _mcp_minute.items() if not v or now - v[-1] > 60]:
+            del _mcp_minute[key]
+    if calls_model:
+        check_global_burst()
+        check_provider_budget()
+        check_quota(client)
 
 
 def cache_key(question: str) -> str:

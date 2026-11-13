@@ -10,6 +10,7 @@ dependencies = [
     "fastapi>=0.162.4",
     "uvicorn[standard]>=0.54.0",
     "fastembed>=0.9.1",
+    "mcp>=2.3,<3",
 ]
 
 [project.scripts]

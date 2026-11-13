@@ -24,11 +24,17 @@ from ..services import chat as chat_service
 from ..services import supersession
 from ..services.answering import ask
 from . import guards, httplog
+from .mcp_server import http_app as mcp_http_app
+
+# Built before the app because FastAPI does not run a mounted sub-app's
+# lifespan, and the MCP session manager needs its task group started.
+_mcp_app = mcp_http_app(path="/")
 
 app = FastAPI(
     title="rfc-rag",
     description="Answers about DNS RFCs, with verified quotes and supersession status.",
     version="0.1.0",
+    lifespan=_mcp_app.router.lifespan_context,
 )
 log = logging.getLogger(__name__)
 STARTED = time.time()
@@ -36,6 +42,10 @@ UI = Path(__file__).parent / "static" / "index.html"
 
 httplog.setup(os.getenv("LOG_LEVEL", "INFO"))
 app.add_middleware(httplog.RequestLog)
+
+# Same process as the REST API, so both share the in-process rate limiters and
+# the provider budget. Mounted rather than run separately for that reason.
+app.mount("/mcp", _mcp_app)
 METRICS_TOKEN = os.getenv("METRICS_TOKEN", "")
 
 

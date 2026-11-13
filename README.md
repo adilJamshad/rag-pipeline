@@ -168,6 +168,49 @@ connection string does not appear in a 500 response body.
 Deployment, including a genuinely free hosting combination, is in
 **[docs/DEPLOY.md](docs/DEPLOY.md)**.
 
+## MCP server
+
+Mounted at `/mcp` in the same process as the REST API, over streamable HTTP, so
+a hosted instance can be connected to any MCP client:
+
+```json
+{"mcpServers": {"rfc-rag": {"url": "https://your-host/mcp/"}}}
+```
+
+| Tool | Returns | Provider calls |
+|---|---|---|
+| `rfc_status(number)` | current or replaced, the chain to a live document, amendment count | **0** |
+| `rfc_search(query, k, current_only)` | ranked sections with RFC, section, URL, text, document status | **0** |
+| `rfc_section(number, section)` | exact text of one section, or an error | **0** |
+
+### Why there is no `ask` tool
+
+A client connecting here already has a model. Exposing synthesis would make
+*our* model summarise so *theirs* could paraphrase the summary — information
+lost at both steps, and the provider budget spent to lose it. The tools return
+verified sections and let the caller reason.
+
+That is also why every tool costs **zero provider calls**, which is what makes
+`MCP_PER_MINUTE` 120 rather than 6: these paths were measured at 432 and 1,015
+requests per second, so the limit exists to stop a runaway agent loop, not to
+ration anything.
+
+### Limits
+
+| Limit | Default | Protects |
+|---|---|---|
+| `MCP_PER_MINUTE` | 120 per caller | the database, against agent loops |
+| `GLOBAL_PER_MINUTE` | 25 across all callers | the provider's 30 RPM ceiling |
+| `check_provider_budget` | reads `query_log` | the same ceiling, **across workers** |
+
+The last one matters in the cloud. The in-process window only sees one worker,
+and MCP plus the REST API plus a second uvicorn worker would each have allowed
+25 against a provider ceiling of 30. It is checked only before work that calls
+the model, so the zero-cost tools never pay for it.
+
+Three tool definitions cost ~400 tokens of the client's context on **every**
+turn, which is the argument for three rather than six.
+
 ## Observability
 
 Two layers, because they answer different questions.
@@ -231,6 +274,49 @@ exercises six overlapping requests rather than one at a time.
 Requests rejected before `ask()` runs — bad input, rate limits, cache hits —
 appear in the HTTP log but create no `query_log` row, so answer-level metrics
 undercount traffic. The HTTP layer is the honest source for volume.
+
+## MCP server
+
+Mounted at `/mcp` in the same process as the REST API, over streamable HTTP, so
+a hosted instance can be connected to any MCP client:
+
+```json
+{"mcpServers": {"rfc-rag": {"url": "https://your-host/mcp/"}}}
+```
+
+| Tool | Returns | Provider calls |
+|---|---|---|
+| `rfc_status(number)` | current or replaced, the chain to a live document, amendment count | **0** |
+| `rfc_search(query, k, current_only)` | ranked sections with RFC, section, URL, text, document status | **0** |
+| `rfc_section(number, section)` | exact text of one section, or an error | **0** |
+
+### Why there is no `ask` tool
+
+A client connecting here already has a model. Exposing synthesis would make
+*our* model summarise so *theirs* could paraphrase the summary — information
+lost at both steps, and the provider budget spent to lose it. The tools return
+verified sections and let the caller reason.
+
+That is also why every tool costs **zero provider calls**, which is what makes
+`MCP_PER_MINUTE` 120 rather than 6: these paths were measured at 432 and 1,015
+requests per second, so the limit exists to stop a runaway agent loop, not to
+ration anything.
+
+### Limits
+
+| Limit | Default | Protects |
+|---|---|---|
+| `MCP_PER_MINUTE` | 120 per caller | the database, against agent loops |
+| `GLOBAL_PER_MINUTE` | 25 across all callers | the provider's 30 RPM ceiling |
+| `check_provider_budget` | reads `query_log` | the same ceiling, **across workers** |
+
+The last one matters in the cloud. The in-process window only sees one worker,
+and MCP plus the REST API plus a second uvicorn worker would each have allowed
+25 against a provider ceiling of 30. It is checked only before work that calls
+the model, so the zero-cost tools never pay for it.
+
+Three tool definitions cost ~400 tokens of the client's context on **every**
+turn, which is the argument for three rather than six.
 
 ## Observability (detail)
 

@@ -72,12 +72,12 @@ def _generate(prompt: str, kept: list[Hit], trace: Trace, model: str):
     raw = llm.complete(prompt, max_tokens=900, model=model)
     trace.llm_calls += 1
     trace.models.append(model)
-    parsed = stages.parse_response(raw)
+    parsed = stages.clean_response(stages.parse_response(raw))
     if not parsed:
         return raw, None, False, kept[:1], ""
-    used = [kept[i - 1] for i in parsed.get("used", []) if 1 <= i <= len(kept)] or kept[:1]
-    quote = (parsed.get("quote") or "").strip()
-    return raw, parsed, stages.verify(quote, used or kept), used, quote
+    used = [kept[i - 1] for i in parsed["used"] if 1 <= i <= len(kept)] or kept[:1]
+    quote = parsed["quote"]
+    return raw, parsed, stages.verify(quote, used), used, quote
 
 
 def _facts_answer(number: int, trace: Trace, inferred: bool = False) -> Answer:
@@ -207,7 +207,7 @@ def _ask(question: str) -> Answer:
 
     trace.route = "synthesis"
     ignored = stages.unrepresentable_constraint(question)
-    text = parsed["answer"].strip()
+    text = parsed["answer"]
     if ignored:
         text = (f"{text}\n\nNote: retrieval ranks by meaning, not by date, so "
                 f"\"{ignored}\" was not used to filter or order these documents. "

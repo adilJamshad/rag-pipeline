@@ -53,3 +53,43 @@ def test_report_has_the_expected_shape():
 def test_ungrounded_answers_surface_in_attention():
     observability.record(_answer(grounded=False))
     assert any(a["grounded"] is False for a in observability.report(days=1)["attention"])
+
+
+def test_prune_removes_only_rows_outside_the_window():
+    from rfc_rag.db import connect
+
+    observability.record(_answer())
+    with connect() as conn, conn.cursor() as cur:
+        cur.execute("select count(*) from query_log")
+        before = cur.fetchone()[0]
+
+    assert observability.prune(days=3650)["query_log"] == 0
+
+    with connect() as conn, conn.cursor() as cur:
+        cur.execute("select count(*) from query_log")
+        assert cur.fetchone()[0] == before
+
+
+def test_prune_reports_every_table_it_touches():
+    removed = observability.prune(days=3650)
+    assert set(removed) == {"query_log", "chat", "answer_cache"}
+    assert all(isinstance(v, int) for v in removed.values())
+
+
+def test_messages_cascade_when_a_chat_is_pruned():
+    from rfc_rag.db import connect
+    from rfc_rag.services import chat as chat_service
+
+    c = chat_service.create(budget=1000)
+    with connect() as conn, conn.cursor() as cur:
+        cur.execute("""insert into message (chat_id, position, role, content)
+                       values (%s, 0, 'user', 'x')""", (str(c.id),))
+        cur.execute("update chat set updated_at = now() - interval '400 days' where id = %s",
+                    (str(c.id),))
+        conn.commit()
+
+    observability.prune(days=90)
+
+    with connect() as conn, conn.cursor() as cur:
+        cur.execute("select count(*) from message where chat_id = %s", (str(c.id),))
+        assert cur.fetchone()[0] == 0

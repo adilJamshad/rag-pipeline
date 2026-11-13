@@ -61,6 +61,8 @@ Route by rule, not by model. Log which path each question took.
 - `check_burst` is in-process and must stay database-free; `check_quota` is database-backed and is the one that survives restarts and multiple instances. On serverless, only `check_quota` is meaningful.
 - `GLOBAL_PER_DAY` is the cap protecting the model quota. Do not raise it without a reason.
 - `/ask` responses must keep naming every RFC researched, with status — that is the product, not a debugging aid.
+- The answer cache key includes `CACHE_VERSION`. **Bump it when routing, prompts or answer shape change**, or a question answered wrongly keeps serving that answer for the whole TTL, outliving the fix.
+- Model output is validated by `stages.clean_response` before anything indexes or `.strip()`s it. A wrong type is a refusal, never a 500.
 
 ## Concurrency
 
@@ -75,6 +77,8 @@ Also: `guards._minute` is swept, because one never-expiring entry per client IP 
 ## Observability
 
 Every question is recorded to `query_log` from inside `ask()`. Recording is wrapped so it can never break answering — failures are logged, never raised. `QUERY_LOG=0` disables it; `rfc --stats` reports.
+
+Retention: `uv run python -m rfc_rag.observability [days]` prunes `query_log`, `chat` (messages cascade) and `answer_cache` past `RETENTION_DAYS`, default 90. `eval_run` is kept deliberately — it is the regression history.
 
 Real token counts come from `llm.last_usage`, which only the `direct` backend populates — the framework backends do not surface usage, so those rows have null token columns.
 

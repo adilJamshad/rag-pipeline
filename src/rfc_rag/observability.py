@@ -107,3 +107,36 @@ def report(days: int = 30) -> dict:
         "prompt_tokens": pt or 0, "completion_tokens": ct or 0,
         "routes": routes, "attention": attention,
     }
+
+
+RETENTION_DAYS = int(os.getenv("RETENTION_DAYS", "90"))
+
+
+def prune(days: int = RETENTION_DAYS) -> dict[str, int]:
+    """Drop rows older than the retention window.
+
+    query_log, chat and answer_cache grow with traffic and nothing removed
+    them. Fine at a few hundred rows; not on a public URL. Messages cascade
+    from chat, eval history is deliberately kept.
+    """
+    removed = {}
+    with connect() as conn, conn.cursor() as cur:
+        cur.execute("delete from query_log where at < now() - make_interval(days => %s)",
+                    (days,))
+        removed["query_log"] = cur.rowcount
+        cur.execute("delete from chat where updated_at < now() - make_interval(days => %s)",
+                    (days,))
+        removed["chat"] = cur.rowcount
+        cur.execute("delete from answer_cache where at < now() - make_interval(days => %s)",
+                    (days,))
+        removed["answer_cache"] = cur.rowcount
+        conn.commit()
+    return removed
+
+
+if __name__ == "__main__":
+    import sys
+
+    days = int(sys.argv[1]) if len(sys.argv) > 1 else RETENTION_DAYS
+    for table, n in prune(days).items():
+        print(f"  {table:<14} removed {n}")

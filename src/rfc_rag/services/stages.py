@@ -110,6 +110,32 @@ def parse_response(raw: str) -> dict | None:
         return None
 
 
+def clean_response(parsed: dict | None) -> dict | None:
+    """Coerce a parsed response into the shape the pipeline assumes.
+
+    The model is asked for {answer, used, quote} and mostly complies, but a
+    string where a list belongs, or a number where a string belongs, reached
+    code that indexed and called .strip() on it and raised. A malformed answer
+    is a refusal, not a 500.
+    """
+    if not isinstance(parsed, dict):
+        return None
+
+    answer = parsed.get("answer")
+    if not isinstance(answer, str) or not answer.strip():
+        return None
+
+    used = parsed.get("used")
+    if not isinstance(used, (list, tuple)):
+        used = [used] if isinstance(used, (int, bool)) else []
+    indexes = [i for i in used if isinstance(i, int) and not isinstance(i, bool)]
+
+    quote = parsed.get("quote")
+    quote = quote.strip() if isinstance(quote, str) else ""
+
+    return {"answer": answer.strip(), "used": indexes, "quote": quote}
+
+
 def normalise(text: str) -> str:
     collapsed = re.sub(r"\s+", " ", text).strip().lower()
     return re.sub(r"^[^\w]+|[^\w]+$", "", collapsed)

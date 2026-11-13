@@ -200,6 +200,19 @@ cache     entries and hits
 answers   route mix, grounding, refusals, token spend
 ```
 
+### Concurrency
+
+Sync endpoints run in a threadpool, so module-level state is shared across
+requests. Three bugs followed from that and are now regression-tested:
+per-request token counts were a module global and leaked between threads;
+`chat.send` assigned message positions by reading a counter outside its
+transaction, so two quick messages collided on a unique constraint and
+returned a 500; and request logging identified its own row with `max(id)`,
+attributing one caller to another's row.
+
+None were visible in single-user testing, which is the point — the suite now
+exercises six overlapping requests rather than one at a time.
+
 ### Known gap
 
 Requests rejected before `ask()` runs — bad input, rate limits, cache hits —

@@ -127,6 +127,7 @@ class Trace:
     retrieved: list[str] = field(default_factory=list)
     context_tokens: int = 0
     llm_calls: int = 0
+    log_id: int | None = None
     models: list[str] = field(default_factory=list)
     escalated: bool = False
     timings: dict[str, float] = field(default_factory=dict)

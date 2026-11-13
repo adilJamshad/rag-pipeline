@@ -1,6 +1,7 @@
 import json
 import logging
 import random
+import threading
 import time
 
 import httpx
@@ -10,8 +11,18 @@ from .base import LLMError
 
 name = "direct"
 
-last_usage: dict | None = None
+# Per-thread, because FastAPI runs sync endpoints in a threadpool and a module
+# global let one request read another request's token counts.
+_state = threading.local()
 log = logging.getLogger(__name__)
+
+
+def _get_last_usage() -> dict | None:
+    return getattr(_state, "usage", None)
+
+
+def _set_last_usage(value: dict | None) -> None:
+    _state.usage = value
 
 RETRY_STATUS = {408, 409, 425, 429, 500, 502, 503, 504}
 MAX_ATTEMPTS = 5
@@ -105,8 +116,7 @@ def complete(prompt: str, *, max_tokens: int = 800, temperature: float = 0.0,
     data = r.json()
     if "error" in data:
         raise LLMError(str(data["error"]))
-    global last_usage
-    last_usage = data.get("usage")
+    _set_last_usage(data.get("usage"))
     message = data["choices"][0]["message"]
     content = (message.get("content") or "").strip()
     if not content and message.get("reasoning_content"):
@@ -124,10 +134,17 @@ def embed(texts: list[str]) -> list[list[float]]:
     data = r.json()
     if "error" in data:
         raise LLMError(str(data["error"]))
-    global last_usage
-    last_usage = data.get("usage")
+    _set_last_usage(data.get("usage"))
     vectors = [d["embedding"] for d in data["data"]]
     bad = {len(v) for v in vectors} - {config.EMBED_DIM}
     if bad:
         raise LLMError(f"expected dim {config.EMBED_DIM}, got {bad}")
     return vectors
+
+
+
+def __getattr__(name):
+    """`last_usage` stays readable as an attribute, but per thread."""
+    if name == "last_usage":
+        return _get_last_usage()
+    raise AttributeError(name)

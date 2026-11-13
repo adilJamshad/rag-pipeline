@@ -61,6 +61,8 @@ def record(answer: Answer, error: str | None = None) -> int | None:
             ))
             row = cur.fetchone()
             conn.commit()
+            if row:
+                trace.log_id = row[0]
             return row[0] if row else None
     except Exception as exc:
         log.warning("could not record query: %s: %s", type(exc).__name__, exc)

@@ -154,7 +154,14 @@ def send(chat_id: str, question: str, sources_of) -> Turn:
     tokens_out = usage.get("completion_tokens") or 0
 
     with connect() as conn, conn.cursor() as cur:
-        position = chat.message_count
+        # Lock the chat for the duration of the write. Reading message_count
+        # outside the transaction let two concurrent sends pick the same
+        # position, and the unique constraint turned that into a 500.
+        cur.execute("select message_count from chat where id = %s for update", (chat_id,))
+        row = cur.fetchone()
+        if row is None:
+            raise ChatMissing(f"chat {chat_id} not found")
+        position = row[0]
         cur.execute("""insert into message (chat_id, position, role, content,
                                             resolved_question)
                        values (%s, %s, 'user', %s, %s)""",

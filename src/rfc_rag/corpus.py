@@ -12,13 +12,24 @@ from .db import connect
 
 log = logging.getLogger(__name__)
 
+# The stamp changes only when the embeddings job runs, so reading it on every
+# search cost a 7 ms round trip for an answer that never moved.
+_cached: tuple[str, int] | None = None
+_checked = False
+
 
 class EmbeddingMismatch(RuntimeError):
     pass
 
 
+def reset_cache() -> None:
+    global _cached, _checked
+    _cached, _checked = None, False
+
+
 def stamp() -> None:
     """Record which model produced the vectors currently in the database."""
+    reset_cache()
     with connect() as conn, conn.cursor() as cur:
         cur.execute("""
             insert into corpus_meta (id, embed_model, embed_dim, embed_base, embedded_at)
@@ -38,7 +49,11 @@ def recorded() -> tuple[str, int] | None:
 
 def check() -> None:
     """Fail loudly when the configured embedder is not the one in the database."""
+    global _cached, _checked
+    if _checked and _cached == (config.EMBED_MODEL, config.EMBED_DIM):
+        return
     found = recorded()
+    _cached, _checked = found, True
     if found is None:
         log.warning("corpus has no embedding stamp; run the embeddings job to set one")
         return

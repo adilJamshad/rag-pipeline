@@ -62,6 +62,16 @@ Route by rule, not by model. Log which path each question took.
 - `GLOBAL_PER_DAY` is the cap protecting the model quota. Do not raise it without a reason.
 - `/ask` responses must keep naming every RFC researched, with status — that is the product, not a debugging aid.
 
+## Concurrency
+
+FastAPI runs sync endpoints in a **threadpool**, so anything at module level is shared between in-flight requests. Three bugs came from ignoring that, all now covered by `tests/test_concurrency.py`:
+
+- Per-request state (`last_used`, `last_usage`) must be `threading.local()`. As module globals, 3 of 4 threads read another request's token counts.
+- Read-then-write against a row needs `select ... for update`. `chat.send` read `message_count` outside the transaction, so concurrent sends picked the same position and the unique constraint returned a 500 to the user.
+- Never identify a row with `max(id)`. `_tag` did, and wrote one request's client onto another's log row. Pass the id instead — `observability.record` sets `trace.log_id`.
+
+Also: `guards._minute` is swept, because one never-expiring entry per client IP retained ~39 MB at 50,000 callers.
+
 ## Observability
 
 Every question is recorded to `query_log` from inside `ask()`. Recording is wrapped so it can never break answering — failures are logged, never raised. `QUERY_LOG=0` disables it; `rfc --stats` reports.

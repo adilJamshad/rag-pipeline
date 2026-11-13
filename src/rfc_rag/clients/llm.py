@@ -8,6 +8,7 @@ client library rather than the server.
 
 import importlib
 import logging
+import threading
 
 from .. import config
 from .base import LLMError
@@ -18,8 +19,8 @@ BACKENDS = {"direct": "._direct", "langchain": "._langchain",
             "llamaindex": "._llamaindex", "local": "._local"}
 
 _loaded: dict[str, object] = {}
-last_used: str | None = None
-last_usage: dict | None = None
+# Per-thread for the same reason as the backends: these describe one request.
+_state = threading.local()
 
 
 def load(name: str):
@@ -38,14 +39,13 @@ def chain() -> list[str]:
 
 
 def _call(method: str, *args, **kwargs):
-    global last_used, last_usage
     errors = []
     for name in chain():
         try:
             backend = load(name)
             result = getattr(backend, method)(*args, **kwargs)
-            last_used = name
-            globals()["last_usage"] = getattr(backend, "last_usage", None)
+            _state.used = name
+            _state.usage = getattr(backend, "last_usage", None)
             return result
         except Exception as exc:
             errors.append(f"{name}: {type(exc).__name__}: {exc}")
@@ -67,8 +67,16 @@ def embed(texts: list[str]) -> list[list[float]]:
     returns plausible numbers and meaningless rankings, so a second backend
     would corrupt retrieval silently. One backend, or an error.
     """
-    global last_used
     backend = load(config.EMBED_BACKEND)
     vectors = backend.embed(texts)
-    last_used = config.EMBED_BACKEND
+    _state.used = config.EMBED_BACKEND
     return vectors
+
+
+def __getattr__(name):
+    """`last_used` and `last_usage` describe the calling thread's last call."""
+    if name == "last_used":
+        return getattr(_state, "used", None)
+    if name == "last_usage":
+        return getattr(_state, "usage", None)
+    raise AttributeError(name)

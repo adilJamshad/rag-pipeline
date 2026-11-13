@@ -25,6 +25,8 @@ CONTROL = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]")
 WHITESPACE = re.compile(r"\s+")
 
 _minute: dict[str, deque[float]] = defaultdict(deque)
+_last_sweep = 0.0
+SWEEP_EVERY = 60.0
 
 
 class Rejected(Exception):
@@ -46,9 +48,24 @@ def clean_question(raw: str) -> str:
     return text
 
 
+def _sweep(now: float) -> None:
+    """Drop windows with nothing left in them.
+
+    One entry per client IP that never expired is a slow leak: 50,000 distinct
+    callers retained ~39 MB and none of it was reachable again.
+    """
+    global _last_sweep
+    if now - _last_sweep < SWEEP_EVERY:
+        return
+    _last_sweep = now
+    for key in [k for k, v in _minute.items() if not v or now - v[-1] > 60]:
+        del _minute[key]
+
+
 def check_burst(client: str) -> None:
     """In-memory, per-process. Stops a hot loop without touching the database."""
     now = time.time()
+    _sweep(now)
     window = _minute[client]
     while window and now - window[0] > 60:
         window.popleft()

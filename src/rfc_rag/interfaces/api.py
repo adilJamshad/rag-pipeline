@@ -284,11 +284,17 @@ def metrics(request: Request):
 
 
 def _tag(client: str, answer: Answer) -> None:
-    """Attach the caller to the row ask() just wrote."""
+    """Attach the caller to this request's row.
+
+    Previously this updated max(id), which under concurrency wrote one
+    request's client onto another request's row.
+    """
+    row_id = answer.trace.log_id
+    if row_id is None:
+        return
     try:
         with connect() as conn, conn.cursor() as cur:
-            cur.execute("""update query_log set client = %s
-                            where id = (select max(id) from query_log)""", (client,))
+            cur.execute("update query_log set client = %s where id = %s", (client, row_id))
             conn.commit()
     except Exception:
-        pass
+        log.warning("could not tag query_log row %s", row_id)

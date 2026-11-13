@@ -196,3 +196,30 @@ def test_the_global_window_slides(monkeypatch):
     guards.check_global_burst()
     guards._global_minute[0] -= 61
     guards.check_global_burst()
+
+
+def test_dashboard_is_served():
+    r = client.get("/dashboard")
+    assert r.status_code == 200
+    assert "RFC RAG Metrics" in r.text
+
+
+def test_corpus_health_reports_readiness():
+    body = client.get("/metrics/corpus").json()
+    for key in ("documents", "sections", "embedded", "embedding_model", "ready"):
+        assert key in body
+    assert isinstance(body["ready"], bool)
+
+
+def test_eval_history_has_runs_baseline_and_failures():
+    body = client.get("/metrics/evals").json()
+    assert set(body) >= {"runs", "baseline", "failures", "regressed"}
+    assert isinstance(body["runs"], list)
+
+
+def test_metrics_endpoints_respect_the_token(monkeypatch):
+    monkeypatch.setattr(api, "METRICS_TOKEN", "secret")
+    assert client.get("/metrics").status_code == 401
+    assert client.get("/metrics/evals").status_code == 401
+    assert client.get("/metrics",
+                      headers={"authorization": "Bearer secret"}).status_code == 200

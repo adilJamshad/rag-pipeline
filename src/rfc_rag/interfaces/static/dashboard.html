@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RFC RAG Metrics</title>
+<style>
+  :root {
+    --bg:#fbfbfa; --panel:#fff; --ink:#1c1c1a; --muted:#6b6b66; --line:#e4e3df;
+    --accent:#2b5fd9; --ok:#2f7d4f; --warn:#9a6b00; --warn-bg:#fdf6e3;
+    --bad:#a33; --bad-bg:#fcf0ef; --radius:10px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg:#17171a; --panel:#1f1f23; --ink:#e8e8e6; --muted:#9a9a95; --line:#32323a;
+      --accent:#7aa2f7; --ok:#6fbf8b; --warn:#d7a93e; --warn-bg:#2a2416;
+      --bad:#e0706a; --bad-bg:#2b1a19;
+    }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:14px/1.5 ui-sans-serif,-apple-system,"Segoe UI",system-ui,sans-serif}
+  header{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;padding:14px 20px;
+    border-bottom:1px solid var(--line);background:var(--panel);position:sticky;top:0;z-index:5}
+  h1{font-size:15px;margin:0;font-weight:650}
+  .sub{color:var(--muted);font-size:12px}
+  .spacer{flex:1}
+  button{font:inherit;font-size:12px;padding:5px 11px;border-radius:7px;
+    border:1px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer}
+  button:hover{border-color:var(--accent);color:var(--accent)}
+  main{max-width:1060px;margin:0 auto;padding:20px 16px 56px;
+    display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(320px,1fr))}
+  section{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+    padding:14px 16px}
+  section.wide{grid-column:1/-1}
+  h2{font-size:12px;margin:0 0 12px;text-transform:uppercase;letter-spacing:.06em;
+    color:var(--muted);font-weight:650}
+  .tiles{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(104px,1fr))}
+  .tile .v{font-size:21px;font-weight:620;font-variant-numeric:tabular-nums;line-height:1.2}
+  .tile .k{font-size:11px;color:var(--muted);margin-top:1px}
+  .tile .v.ok{color:var(--ok)} .tile .v.bad{color:var(--bad)} .tile .v.warn{color:var(--warn)}
+  table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+  th{text-align:left;font-size:11px;color:var(--muted);font-weight:600;
+    padding:5px 8px 5px 0;border-bottom:1px solid var(--line)}
+  td{padding:5px 8px 5px 0;border-bottom:1px solid var(--line);font-size:13px}
+  tr:last-child td{border-bottom:0}
+  td.n,th.n{text-align:right}
+  .bar{height:4px;background:var(--line);border-radius:2px;overflow:hidden;margin-top:5px}
+  .bar i{display:block;height:100%;background:var(--accent)}
+  .bar i.bad{background:var(--bad)}
+  .note{padding:8px 11px;border-radius:7px;font-size:12px;margin-top:10px}
+  .note.bad{background:var(--bad-bg);color:var(--bad)}
+  .note.warn{background:var(--warn-bg);color:var(--warn)}
+  .delta{font-size:12px} .up{color:var(--ok)} .down{color:var(--bad)}
+  .muted{color:var(--muted)} .mono{font-family:ui-monospace,Menlo,monospace;font-size:12px}
+  .empty{color:var(--muted);font-size:13px;padding:6px 0}
+</style>
+</head>
+<body>
+<header>
+  <h1>RFC RAG</h1><span class="sub">metrics</span>
+  <span class="spacer"></span>
+  <span class="sub" id="stamp"></span>
+  <button id="refresh">Refresh</button>
+</header>
+<main id="main"><section class="wide"><div class="empty">Loading…</div></section></main>
+
+<script>
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c =>
+  ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const pct = (n, d) => d ? Math.round(n / d * 100) : 0;
+const num = n => (n ?? 0).toLocaleString();
+
+async function get(path) {
+  const r = await fetch(path);
+  if (!r.ok) throw new Error(`${path} -> ${r.status}`);
+  return r.json();
+}
+
+function tile(value, label, cls = '') {
+  return `<div class="tile"><div class="v ${cls}">${value}</div><div class="k">${label}</div></div>`;
+}
+
+function serviceSection(m) {
+  const h = m.http || {};
+  const cls = h.by_class || {};
+  const errs = (cls['4xx'] || 0) + (cls['5xx'] || 0);
+  const rows = Object.entries(h.routes || {})
+    .sort((a, b) => b[1].n - a[1].n)
+    .map(([route, v]) => `<tr><td class="mono">${esc(route)}</td>
+      <td class="n">${v.n}</td><td class="n">${v.p50_ms}ms</td>
+      <td class="n">${v.p95_ms}ms</td><td class="n muted">${v.max_ms}ms</td></tr>`).join('');
+  return `<section class="wide"><h2>Service — this process</h2>
+    <div class="tiles">
+      ${tile(num(h.requests), 'requests')}
+      ${tile(num(cls['2xx'] || 0), '2xx', 'ok')}
+      ${tile(num(cls['4xx'] || 0), '4xx', (cls['4xx'] || 0) ? 'warn' : '')}
+      ${tile(num(cls['5xx'] || 0), '5xx', (cls['5xx'] || 0) ? 'bad' : '')}
+      ${tile(pct(errs, h.requests) + '%', 'error rate', errs ? 'warn' : 'ok')}
+    </div>
+    ${rows ? `<table style="margin-top:12px"><tr><th>route</th><th class="n">n</th>
+      <th class="n">p50</th><th class="n">p95</th><th class="n">max</th></tr>${rows}</table>`
+      : '<div class="empty">No requests since this process started.</div>'}
+    <div class="note warn">Counters reset on restart — they describe this process only.
+      Durable history is in <span class="mono">query_log</span>.</div>
+  </section>`;
+}
+
+function answersSection(m) {
+  const a = m.answers || {};
+  const grounded = a.answered ? a.answered - (a.ungrounded || 0) : 0;
+  const rows = (a.routes || []).map(r => `<tr><td>${esc(r.route || '?')}</td>
+    <td class="n">${r.n}</td><td class="n">${r.p50_ms ?? 0}ms</td>
+    <td class="n">${r.p95_ms ?? 0}ms</td>
+    <td class="n ${r.llm_calls ? '' : 'ok'}">${r.llm_calls}</td></tr>`).join('');
+  const noModel = (a.routes || []).filter(r => !r.llm_calls).reduce((s, r) => s + r.n, 0);
+  return `<section class="wide"><h2>Answers — all time</h2>
+    <div class="tiles">
+      ${tile(num(a.total), 'questions')}
+      ${tile(pct(grounded, a.answered) + '%', 'quote verified',
+             pct(grounded, a.answered) >= 85 ? 'ok' : 'warn')}
+      ${tile(pct(a.refused, a.total) + '%', 'refused')}
+      ${tile(pct(noModel, a.total) + '%', 'answered without the model',
+             noModel ? 'ok' : '')}
+      ${tile(num(a.prompt_tokens) + ' / ' + num(a.completion_tokens), 'tokens in / out')}
+    </div>
+    ${rows ? `<table style="margin-top:12px"><tr><th>route</th><th class="n">n</th>
+      <th class="n">p50</th><th class="n">p95</th><th class="n">model calls</th></tr>
+      ${rows}</table>` : '<div class="empty">Nothing recorded.</div>'}
+  </section>`;
+}
+
+function qualitySection(e) {
+  const runs = e.runs || [];
+  if (!runs.length) return `<section class="wide"><h2>Quality over time</h2>
+    <div class="empty">No evaluation runs recorded.</div></section>`;
+  const latest = runs[0], prev = runs[1];
+  const keys = [['doc_r5','right doc @5'],['doc_r10','right doc @10'],['mrr','MRR'],
+                ['correct','correct'],['grounded','grounded'],['refusal_accuracy','refusals right']];
+  const tiles = keys.map(([k, label]) => {
+    const now = latest[k], before = prev?.[k];
+    const d = (before != null && now != null) ? now - before : null;
+    const arrow = d == null ? '' :
+      `<span class="delta ${d >= 0 ? 'up' : 'down'}">${d >= 0 ? '+' : ''}${d.toFixed(3)}</span>`;
+    return `<div class="tile"><div class="v">${now != null ? now.toFixed(3) : '—'}</div>
+      <div class="k">${label} ${arrow}</div></div>`;
+  }).join('');
+  const rows = runs.map(r => `<tr><td class="n">${r.id}</td>
+    <td class="muted">${(r.at || '').slice(0, 10)}</td>
+    <td>${esc(r.label || '')}</td>
+    <td class="n">${r.doc_r5?.toFixed(3) ?? '—'}</td>
+    <td class="n">${r.mrr?.toFixed(3) ?? '—'}</td>
+    <td class="n">${r.grounded?.toFixed(3) ?? '—'}</td></tr>`).join('');
+  const failures = (e.failures || []).map(f =>
+    `<div class="note bad">${esc(f)}</div>`).join('');
+  const regressed = (e.regressed || []).map(r =>
+    `<div class="note warn">regressed: ${esc(r.question_id)} — ${esc(r.question || '')}</div>`).join('');
+  return `<section class="wide"><h2>Quality over time</h2>
+    <div class="tiles">${tiles}</div>
+    ${failures || regressed || '<div class="note" style="background:transparent;color:var(--ok)">No regression against the committed baseline.</div>'}
+    <table style="margin-top:12px"><tr><th class="n">run</th><th>date</th><th>label</th>
+      <th class="n">doc@5</th><th class="n">MRR</th><th class="n">grounded</th></tr>${rows}</table>
+    <div class="note warn">n=${latest.n_questions ?? 30}. A 0.03 move is one question;
+      treat small deltas as noise.</div>
+  </section>`;
+}
+
+function corpusSection(c) {
+  const done = pct(c.embedded, c.sections);
+  return `<section><h2>Corpus</h2>
+    <div class="tiles">
+      ${tile(num(c.documents), 'documents')}
+      ${tile(num(c.sections), 'sections')}
+      ${tile(num(c.obsolete_documents), 'obsolete', c.obsolete_documents ? 'warn' : '')}
+      ${tile(num(c.updates_edges), 'update edges')}
+    </div>
+    <div style="margin-top:12px">
+      <div class="muted" style="font-size:12px">${num(c.embedded)} / ${num(c.sections)} embedded
+        — ${esc(c.embedding_model || 'unstamped')} (${c.embedding_dim ?? '?'}d)</div>
+      <div class="bar"><i class="${c.ready ? '' : 'bad'}" style="width:${done}%"></i></div>
+    </div>
+    ${c.ready ? '' : '<div class="note bad">Corpus incomplete — search is degraded.</div>'}
+  </section>`;
+}
+
+function budgetSection(m) {
+  const q = m.quota || {}, c = m.cache || {};
+  const used = pct(q.used_today, q.global_daily_limit);
+  return `<section><h2>Budget &amp; cache</h2>
+    <div class="tiles">
+      ${tile(num(q.used_today), 'model calls today')}
+      ${tile(num(q.global_daily_limit), 'daily cap')}
+      ${tile(num(c.entries), 'cached answers')}
+      ${tile(num(c.hits), 'cache hits', c.hits ? 'ok' : '')}
+    </div>
+    <div class="bar" style="margin-top:12px"><i class="${used > 80 ? 'bad' : ''}"
+      style="width:${used}%"></i></div>
+    <div class="note warn">The provider allows 30 requests/minute. The daily cap
+      never binds first — <span class="mono">GLOBAL_PER_MINUTE</span> does.</div>
+  </section>`;
+}
+
+async function load() {
+  try {
+    const [m, e, c] = await Promise.all([
+      get('/metrics'), get('/metrics/evals'), get('/metrics/corpus')]);
+    $('stamp').textContent = new Date().toLocaleTimeString();
+    $('main').innerHTML = serviceSection(m) + answersSection(m) +
+                          qualitySection(e) + corpusSection(c) + budgetSection(m);
+  } catch (err) {
+    $('main').innerHTML = `<section class="wide"><div class="note bad">${esc(err.message)}
+      — is METRICS_TOKEN set? These endpoints require it when configured.</div></section>`;
+  }
+}
+$('refresh').onclick = load;
+load();
+setInterval(load, 30000);
+</script>
+</body>
+</html>

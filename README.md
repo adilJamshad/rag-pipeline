@@ -120,6 +120,8 @@ the chat goes read-only.
 | Endpoint | Model calls | Notes |
 |---|---|---|
 | `GET /` | 0 | the chat page |
+| `GET /dashboard` | 0 | every metric on one page |
+| `GET /metrics/evals` · `GET /metrics/corpus` | 0 | quality history, corpus health |
 | `POST /chats` · `GET /chats` · `GET /chats/{id}` | 0 | conversations and history |
 | `POST /chats/{id}/messages` | 0 or 1 | a turn; 409 once the chat is read-only |
 | `POST /ask` | 0 or 1 | stateless, rate limited, cached, returns every RFC researched |
@@ -190,6 +192,17 @@ now.
 timings, retrieved section anchors, context size, prompt and completion tokens,
 which backend answered, whether the quote verified, cited RFCs. These are not
 HTTP concerns; no access log can see them, which is why they warrant a table.
+
+**<http://localhost:8000/dashboard>** reads all of it on one page: request
+volume and error rate, latency per route, grounding and refusal rates, how much
+traffic is answered without the model, quality across every recorded evaluation
+run with deltas and the questions that regressed, corpus completeness, and
+budget against the provider's ceiling. One HTML file, no build step, refreshes
+every 30 seconds.
+
+It states its own caveats where they belong rather than in a footnote: HTTP
+counters reset with the process, and a 0.03 move on a 30-question eval is one
+question.
 
 `GET /metrics` keeps the two apart:
 

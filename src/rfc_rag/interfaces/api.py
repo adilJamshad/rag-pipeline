@@ -19,6 +19,7 @@ from .. import corpus, observability
 from ..clients.base import LLMError
 from ..db import connect
 from ..models import Answer
+from ..evaluation import gate, store
 from ..services import chat as chat_service
 from ..services import supersession
 from ..services.answering import ask
@@ -231,6 +232,58 @@ def send_message(chat_id: str, body: Question, request: Request):
     return {**payload, "chat": _chat_json(turn.chat),
             "resolved_question": turn.resolved_question
                                  if turn.resolved_question != question else None}
+
+
+@app.get("/dashboard", include_in_schema=False)
+def dashboard():
+    return FileResponse(UI.parent / "dashboard.html", media_type="text/html")
+
+
+@app.get("/metrics/evals")
+def eval_history(request: Request):
+    """Quality over time: every recorded run, and what broke in the latest."""
+    if METRICS_TOKEN and request.headers.get("authorization") != f"Bearer {METRICS_TOKEN}":
+        return JSONResponse({"error": "unauthorized"}, 401)
+
+    runs = store.history(limit=20)
+    regressed = []
+    if len(runs) > 1:
+        regressed = store.regressions(runs[0]["id"], runs[1]["id"])
+    baseline = gate.load() or {}
+    current = {k: float(runs[0][k]) for k in ("doc_r5", "doc_r10", "mrr", "correct",
+                                              "grounded", "refusal_accuracy")
+               if runs and runs[0].get(k) is not None} if runs else {}
+    return {
+        "runs": [{**r, "id": r["id"], "at": r["at"].isoformat() if r.get("at") else None,
+                  **{k: float(v) if v is not None else None
+                     for k, v in r.items() if k not in ("id", "at", "git_sha",
+                                                        "label", "retrieval",
+                                                        "dirty", "n_questions")}}
+                 for r in runs],
+        "baseline": baseline,
+        "failures": gate.compare(current, baseline) if baseline and current else [],
+        "regressed": regressed,
+    }
+
+
+@app.get("/metrics/corpus")
+def corpus_health():
+    with connect() as conn, conn.cursor() as cur:
+        cur.execute("""select count(*), count(embedding), count(distinct rfc),
+                              coalesce(sum(tokens), 0) from section""")
+        sections, embedded, docs, tokens = cur.fetchone()
+        cur.execute("select count(*) filter (where kind='obsoletes'), "
+                    "count(*) filter (where kind='updates') from rfc_relation")
+        obsoletes, updates = cur.fetchone()
+        cur.execute("select count(*) from rfc_status where is_obsolete")
+        dead = cur.fetchone()[0]
+    stamp = corpus.recorded()
+    return {"documents": docs, "sections": sections, "embedded": embedded,
+            "tokens": tokens, "obsoletes_edges": obsoletes, "updates_edges": updates,
+            "obsolete_documents": dead,
+            "embedding_model": stamp[0] if stamp else None,
+            "embedding_dim": stamp[1] if stamp else None,
+            "ready": sections == embedded and sections > 0}
 
 
 @app.get("/healthz")

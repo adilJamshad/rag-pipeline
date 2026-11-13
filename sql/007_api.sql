@@ -12,3 +12,7 @@ create table if not exists answer_cache (
 );
 
 create index if not exists answer_cache_at_idx on answer_cache (at desc);
+
+-- Cached answers outlive the code that produced them, so the version that
+-- wrote each row is recorded and forms part of the key.
+alter table answer_cache add column if not exists version text;

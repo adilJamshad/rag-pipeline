@@ -1,6 +1,6 @@
 import pytest
 
-from rfc_rag.models import Change
+from rfc_rag.models import Change, Trace
 from rfc_rag.services import stages
 
 
@@ -82,3 +82,34 @@ def test_a_named_rfc_beats_both_recency_routes():
 def test_unrepresentable_constraints_are_detected(question, expected):
     got = stages.unrepresentable_constraint(question)
     assert (got.lower() if got else None) == expected
+
+
+def test_a_named_section_is_fetched_exactly(monkeypatch):
+    """Ranking inside the document and returning a different section is not an answer."""
+    from rfc_rag.models import Hit
+    from rfc_rag.services import answering, supersession
+
+    wanted = Hit(1, 1035, "section-2.3.4", "2.3.4", "Size limits", "labels 63 octets", 1.0)
+    calls = {}
+
+    def exact(rfc, number):
+        calls["args"] = (rfc, number)
+        return [wanted] if number == "2.3.4" else []
+
+    monkeypatch.setattr(supersession, "section", exact)
+    monkeypatch.setattr(answering, "semantic",
+                        lambda *a, **k: pytest.fail("similarity must not be used here"))
+
+    hits = answering.gather(stages.analyse("what does RFC 1035 section 2.3.4 say"),
+                            "passage", Trace("q"))
+    assert calls["args"] == (1035, "2.3.4")
+    assert hits == [wanted]
+
+
+def test_a_missing_section_says_so(monkeypatch):
+    from rfc_rag.services import answering, supersession
+
+    monkeypatch.setattr(supersession, "section", lambda rfc, number: [])
+    answer = answering.ask("what does RFC 1035 section 99.99 say")
+    assert answer.route == "refusal"
+    assert "no section 99.99" in answer.text

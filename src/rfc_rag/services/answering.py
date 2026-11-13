@@ -45,6 +45,14 @@ def resolve_topic(question: str) -> int | None:
 def gather(analysis: Analysis, route: str, trace: Trace) -> list[Hit]:
     started = time.time()
     restrict = analysis.rfc_refs[0] if route == "passage" else None
+    if route == "passage" and analysis.section_ref:
+        # A named section is an exact request. Ranking by similarity inside the
+        # document and returning a different section looks like an answer and
+        # is not one.
+        exact = supersession.section(restrict, analysis.section_ref)
+        trace.retrieved = [f"{restrict}/{analysis.section_ref}"] if exact else []
+        trace.step("gather", started)
+        return exact
     hits = semantic(analysis.question, POOL, demote=DEMOTE, only_rfc=restrict)
     trace.retrieved = [f"{h.rfc}/{h.anchor}" for h in hits]
     trace.step("gather", started)
@@ -156,6 +164,10 @@ def _ask(question: str) -> Answer:
     hits = gather(analysis, route, trace)
     if not hits:
         trace.route = "refusal"
+        if route == "passage" and analysis.section_ref:
+            return Answer("refusal",
+                          f"RFC {analysis.rfc_refs[0]} has no section "
+                          f"{analysis.section_ref} in this corpus.", trace)
         return Answer("refusal", "Nothing in the corpus matches that question.", trace)
 
     if route == "passage" and not analysis.intent:

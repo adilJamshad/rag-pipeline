@@ -1,7 +1,7 @@
 """What the obsoletes/updates graph knows about a document."""
 
 from ..db import connect
-from ..models import Change, Fact
+from ..models import Change, Fact, Hit
 
 
 def lookup(number: int) -> Fact | None:
@@ -54,3 +54,17 @@ def newest(limit: int = 6) -> list[Fact]:
         """, (limit,))
         numbers = [r[0] for r in cur.fetchall()]
     return [f for f in (lookup(n) for n in numbers) if f]
+
+
+def section(rfc: int, number: str) -> list[Hit]:
+    """Exactly the section asked for, or nothing."""
+    with connect() as conn, conn.cursor() as cur:
+        cur.execute("""
+            select s.id, s.rfc, s.anchor, s.number, s.title, s.body, 1.0,
+                   exists (select 1 from rfc_relation x
+                            where x.dst = s.rfc and x.kind = 'obsoletes')
+              from section s
+             where s.rfc = %s and s.number = %s
+             order by s.anchor
+        """, (rfc, number))
+        return [Hit(*row) for row in cur.fetchall()]

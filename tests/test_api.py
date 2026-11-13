@@ -163,3 +163,33 @@ def test_the_ui_is_served_at_root():
 def test_the_ui_ships_with_the_package():
     from rfc_rag.interfaces.api import UI
     assert UI.exists(), "static/index.html missing from the package"
+
+
+def test_cache_key_changes_with_the_code_version(monkeypatch):
+    """A wrong answer must not outlive the fix that corrects it."""
+    question = "what does the newest rfc say"
+    monkeypatch.setattr(guards, "CACHE_VERSION", "1")
+    old = guards.cache_key(question)
+    monkeypatch.setattr(guards, "CACHE_VERSION", "2")
+    assert guards.cache_key(question) != old
+
+
+def test_a_cached_answer_from_an_older_version_is_not_served(monkeypatch):
+    question = "a question cached by older code"
+    monkeypatch.setattr(guards, "CACHE_VERSION", "1")
+    guards.store(question, {"answer": "stale"})
+    assert guards.cached(question)["answer"] == "stale"
+
+    monkeypatch.setattr(guards, "CACHE_VERSION", "2")
+    assert guards.cached(question) is None
+
+
+def test_purge_removes_entries_from_other_versions(monkeypatch):
+    monkeypatch.setattr(guards, "CACHE_VERSION", "old")
+    guards.store("purge me", {"answer": "x"})
+    monkeypatch.setattr(guards, "CACHE_VERSION", "new")
+    guards.store("keep me", {"answer": "y"})
+    guards.purge(before_version="new")
+    assert guards.cached("keep me") is not None
+    monkeypatch.setattr(guards, "CACHE_VERSION", "old")
+    assert guards.cached("purge me") is None

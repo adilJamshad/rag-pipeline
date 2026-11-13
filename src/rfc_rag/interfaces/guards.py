@@ -21,6 +21,11 @@ PER_DAY = int(os.getenv("RATE_PER_DAY", "60"))
 GLOBAL_PER_DAY = int(os.getenv("GLOBAL_PER_DAY", "800"))
 CACHE_TTL_HOURS = int(os.getenv("CACHE_TTL_HOURS", "168"))
 
+# Bump when routing, prompts or answer shape change. Without it a question
+# answered wrongly keeps serving that answer for CACHE_TTL_HOURS, outliving the
+# fix. Cheap to bump; the cache refills in a day.
+CACHE_VERSION = os.getenv("CACHE_VERSION", "2")
+
 CONTROL = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]")
 WHITESPACE = re.compile(r"\s+")
 
@@ -98,7 +103,21 @@ def check_rate(client: str) -> None:
 
 
 def cache_key(question: str) -> str:
-    return hashlib.sha256(question.lower().strip().encode()).hexdigest()[:32]
+    seed = f"{CACHE_VERSION}:{question.lower().strip()}"
+    return hashlib.sha256(seed.encode()).hexdigest()[:32]
+
+
+def purge(before_version: str | None = None) -> int:
+    """Drop cached answers, optionally only those from older code."""
+    with connect() as conn, conn.cursor() as cur:
+        if before_version is None:
+            cur.execute("delete from answer_cache")
+        else:
+            cur.execute("delete from answer_cache where version is distinct from %s",
+                        (before_version,))
+        removed = cur.rowcount
+        conn.commit()
+    return removed
 
 
 def cached(question: str) -> dict | None:
@@ -116,7 +135,9 @@ def cached(question: str) -> dict | None:
 def store(question: str, payload: dict) -> None:
     with connect() as conn, conn.cursor() as cur:
         cur.execute("""
-            insert into answer_cache (key, question, payload) values (%s, %s, %s)
-            on conflict (key) do update set payload = excluded.payload, at = now()
-        """, (cache_key(question), question, json.dumps(payload)))
+            insert into answer_cache (key, question, payload, version)
+            values (%s, %s, %s, %s)
+            on conflict (key) do update set payload = excluded.payload,
+                                            version = excluded.version, at = now()
+        """, (cache_key(question), question, json.dumps(payload), CACHE_VERSION))
         conn.commit()

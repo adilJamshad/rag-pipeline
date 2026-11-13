@@ -17,6 +17,11 @@ from ..db import connect
 MAX_QUESTION = int(os.getenv("MAX_QUESTION_CHARS", "500"))
 MIN_QUESTION = 3
 PER_MINUTE = int(os.getenv("RATE_PER_MINUTE", "6"))
+# Must sit below the provider's own ceiling. Measured: Groq's free tier allows
+# 30 requests/minute, and six clients at PER_MINUTE each would exceed that,
+# turning provider 429s into 503s for everyone. The daily caps never bind
+# first - 800/day is far under what 30/minute permits.
+GLOBAL_PER_MINUTE = int(os.getenv("GLOBAL_PER_MINUTE", "25"))
 PER_DAY = int(os.getenv("RATE_PER_DAY", "60"))
 GLOBAL_PER_DAY = int(os.getenv("GLOBAL_PER_DAY", "800"))
 CACHE_TTL_HOURS = int(os.getenv("CACHE_TTL_HOURS", "168"))
@@ -30,6 +35,7 @@ CONTROL = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]")
 WHITESPACE = re.compile(r"\s+")
 
 _minute: dict[str, deque[float]] = defaultdict(deque)
+_global_minute: deque[float] = deque()
 _last_sweep = 0.0
 SWEEP_EVERY = 60.0
 
@@ -67,6 +73,18 @@ def _sweep(now: float) -> None:
         del _minute[key]
 
 
+def check_global_burst() -> None:
+    """Keep the whole service under the provider's per-minute ceiling."""
+    now = time.time()
+    while _global_minute and now - _global_minute[0] > 60:
+        _global_minute.popleft()
+    if len(_global_minute) >= GLOBAL_PER_MINUTE:
+        raise Rejected(503, "This demo is at its shared per-minute limit. "
+                            "Try again in a moment.",
+                       retry_after=int(60 - (now - _global_minute[0])) + 1)
+    _global_minute.append(now)
+
+
 def check_burst(client: str) -> None:
     """In-memory, per-process. Stops a hot loop without touching the database."""
     now = time.time()
@@ -99,6 +117,7 @@ def check_quota(client: str) -> None:
 
 def check_rate(client: str) -> None:
     check_burst(client)
+    check_global_burst()
     check_quota(client)
 
 

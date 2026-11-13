@@ -164,3 +164,35 @@ def test_the_ui_ships_with_the_package():
     from rfc_rag.interfaces.api import UI
     assert UI.exists(), "static/index.html missing from the package"
 
+
+
+def test_a_global_per_minute_ceiling_protects_the_provider(monkeypatch):
+    """Six clients at PER_MINUTE each exceeded Groq's measured 30 RPM."""
+    monkeypatch.setattr(guards, "GLOBAL_PER_MINUTE", 5)
+    guards._global_minute.clear()
+    for _ in range(5):
+        guards.check_global_burst()
+    with pytest.raises(guards.Rejected) as exc:
+        guards.check_global_burst()
+    assert exc.value.status == 503
+    assert exc.value.retry_after
+
+
+def test_the_global_ceiling_counts_every_client(monkeypatch):
+    monkeypatch.setattr(guards, "GLOBAL_PER_MINUTE", 3)
+    monkeypatch.setattr(guards, "PER_MINUTE", 100)
+    guards._global_minute.clear()
+    guards._minute.clear()
+    for client in ("a", "b", "c"):
+        guards.check_burst(client)
+        guards.check_global_burst()
+    with pytest.raises(guards.Rejected):
+        guards.check_global_burst()
+
+
+def test_the_global_window_slides(monkeypatch):
+    monkeypatch.setattr(guards, "GLOBAL_PER_MINUTE", 1)
+    guards._global_minute.clear()
+    guards.check_global_burst()
+    guards._global_minute[0] -= 61
+    guards.check_global_burst()

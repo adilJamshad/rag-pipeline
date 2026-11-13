@@ -1,72 +1,98 @@
-# Deploying for free
+# Deploying to Railway
 
-Three pieces, each with a genuine free tier.
+Two services in one project: the app, and Postgres with pgvector. Verified by
+building the image and booting it against an empty database before any of this
+touched Railway.
 
-| Piece | Service | Free allowance | Why it fits |
-|---|---|---|---|
-| Database | **Neon** | 0.5 GB | pgvector is supported; this corpus is **99 MB** |
-| API | **Hugging Face Spaces** (Docker) | always free | public demos are the intended use; sleeps after long idle, wakes on request |
-| Model | **Gemini** free tier | rate limited | `gemini-3.1-flash-lite` for chat, `gemini-embedding-001` for vectors |
+## 1. The database
 
-Total: **$0**, with rate limits as the only real constraint — which is exactly what `interfaces/guards.py` exists to manage.
+**Do not use Railway's standard Postgres** — it has no pgvector. Add a service
+from the public image instead:
 
-## Why these
+> New → Docker Image → `pgvector/pgvector:pg17`
 
-**Neon over Supabase** — both free and both ship pgvector; Neon's branching makes it easy to keep a throwaway copy for eval runs. Either works.
+Set its variables:
 
-**Hugging Face Spaces over Render or Fly** — Render's free web services spin down after 15 minutes idle and cold-start in ~50 seconds, which is a poor first impression for a portfolio link. Fly's free allowance is now usage-credit based rather than a standing free tier. Spaces stays genuinely free for a public demo.
+    POSTGRES_USER=rfc
+    POSTGRES_PASSWORD=<something long>
+    POSTGRES_DB=rfc
 
-**Not serverless** (Vercel, Lambda). Each invocation would pay a cold start, and the per-process rate limiter in `check_burst` only works within one process. On serverless, delete it and rely on `check_quota`, which is database-backed and therefore shared.
+Railway exposes `DATABASE_URL` on that service; reference it from the app as
+`${{Postgres.DATABASE_URL}}`.
 
-## Steps
+## 2. The app
 
-**1. Database**
+> New → GitHub Repo → this repository
 
-Create a Neon project, then from your machine:
+Railway finds the `Dockerfile` and builds it. The image carries the corpus
+(`data/corpus.sql.gz`, 24 MB) and the embedding weights, so a fresh container
+serves correct answers on its first request. `scripts/start.sh` applies the
+migrations, restores the corpus if the database is empty, then starts uvicorn
+on `$PORT`.
 
-    psql "$NEON_URL" -f sql/001_schema.sql
-    psql "$NEON_URL" -f sql/002_chain.sql   # and 003..007
-    pg_dump -d "$LOCAL_URL" --data-only -t rfc -t rfc_relation -t section -t corpus_meta \
-      | psql "$NEON_URL"
+Variables:
 
-Copying the data beats re-running ingestion: the corpus is ~10,000 embedding
-calls, and the free model quota makes that take hours.
+    DATABASE_URL=${{Postgres.DATABASE_URL}}
+    GROQ_API_KEY=<your key>
+    LLM_BASE_URL=https://api.groq.com/openai/v1
+    LLM_MODEL=openai/gpt-oss-20b
+    LLM_BACKEND=direct
+    EMBED_BACKEND=local
+    EMBED_MODEL=bge-small-en-v1.5
+    EMBED_DIM=384
+    METRICS_TOKEN=<something long>
+    GLOBAL_PER_MINUTE=25
+    MCP_PER_MINUTE=120
 
-**2. Secrets** — set in the host's secret manager, never in the image:
+Then **Settings → Networking → Generate Domain**.
 
-    DATABASE_URL        the Neon connection string
-    LLM_API_KEY         Gemini key
-    LLM_BASE_URL        https://generativelanguage.googleapis.com/v1beta/openai
-    LLM_MODEL           gemini-3.1-flash-lite
-    EMBED_MODEL         gemini-embedding-001
-    EMBED_DIM           384
-    EMBED_DIMENSIONS    384
-    METRICS_TOKEN       anything — /metrics is public without it
+## 3. Check it
 
-**3. Tune the limits** for a public demo. Defaults in `guards.py`:
+    curl https://<your-domain>/healthz
 
-    RATE_PER_MINUTE=6       per caller
-    RATE_PER_DAY=60         per caller
-    GLOBAL_PER_DAY=800      everyone, protects the model quota
-    CACHE_TTL_HOURS=168     repeated questions never reach the model
+`status: ok` with `embedded: 9572/9572` means the corpus restored. It returns
+`503` until then, which also makes it a correct readiness probe.
 
-`GLOBAL_PER_DAY` is the one that matters. It is a cap on *your* bill and *your*
-quota, and it is deliberately below what the free tier allows.
+| | |
+|---|---|
+| Chat UI | `https://<domain>/` |
+| Metrics | `https://<domain>/dashboard` |
+| API docs | `https://<domain>/docs` |
+| MCP | `https://<domain>/mcp/` |
 
-**4. Deploy** — the `Dockerfile` builds and runs the API on port 8000.
-`/healthz` returns 503 until every section is embedded, so it doubles as a
-readiness probe.
+Connect an MCP client:
 
-## What a public deployment still needs
+```json
+{"mcpServers": {"rfc-rag": {"url": "https://<your-domain>/mcp/"}}}
+```
 
-- **A cost ceiling you trust.** `GLOBAL_PER_DAY` is enforced in application
-  code. If something bypasses it, Gemini's own quota is the backstop — verify
-  the key is on the free tier with no billing account attached.
-- **Nothing sensitive in the corpus.** RFCs are public domain, so there is no
-  data-exposure surface here. That is a property of this project, not a
-  general safety argument.
-- **An abuse story for the model.** The prompt only ever contains retrieved RFC
-  text plus the question, the question is capped at 500 characters, and every
-  claim must carry a quote that is verified against the source. A prompt
-  injection can make the model refuse or ramble; it cannot make it fabricate a
-  citation that passes `stages.verify`.
+## What this actually costs
+
+Railway's free plan is **$1 of credit a month**, and it bills for resources
+rather than granting a free instance. An always-on container of roughly 1 GB
+runs at about $10 a month, so **$1 does not buy a month of always-on**.
+
+Two honest options:
+
+- **Sleep enabled** (optional on the free plan). An occasionally-used demo
+  stays inside $1. The cost is a cold start on the first request after idle,
+  which an MCP client may experience as a timeout — Railway wakes faster than
+  Render's ~50s, but it is not instant.
+- **About $5 a month** for always-on. For a link on a CV that someone clicks
+  once, a service that is actually up is worth more than the five dollars.
+
+Either way the provider is the ceiling: Groq allows **30 requests a minute**,
+so no amount of hosting makes this faster.
+
+## Why the corpus ships in the image
+
+The alternative is running ingestion on boot: downloading 417 documents from
+rfc-editor.org (about six minutes, throttled) and embedding 9,572 sections.
+Baking a 24 MB dump makes a cold container correct immediately, and makes the
+build reproducible rather than dependent on a third-party site being up.
+
+## Keeping it alive
+
+`observability.prune` drops `query_log`, `chat` and `answer_cache` past
+`RETENTION_DAYS` (90). Run it from Railway's cron, or on a schedule of your
+choosing — nothing else removes those rows, and they grow with traffic.

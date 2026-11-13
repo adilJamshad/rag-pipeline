@@ -2,7 +2,10 @@
 __pycache__/
 *.pyc
 .env
-data/
+data/*
+# the corpus ships in the image: rebuilding it is ~10k embedding calls
+# and a six-minute download from rfc-editor.org
+!data/corpus.sql.gz
 .pytest_cache/
 
 CLAUDE.local.md

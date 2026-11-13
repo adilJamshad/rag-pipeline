@@ -1,5 +1,6 @@
 .venv/
 data/
+!data/corpus.sql.gz
 .git/
 .pytest_cache/
 __pycache__/
